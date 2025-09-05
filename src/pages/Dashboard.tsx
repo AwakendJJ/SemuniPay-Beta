@@ -1,0 +1,511 @@
+import React, { useState } from 'react';
+import { useWallet } from '../context/WalletContext';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Info, Check, ArrowLeft, CreditCard, Send, X } from 'lucide-react';
+
+const Dashboard: React.FC = () => {
+  const { account, disconnectWallet } = useWallet();
+  const navigate = useNavigate();
+  
+  // Mode toggle (spend or buy crypto)
+  const [mode, setMode] = useState<'spend' | 'buy'>('spend');
+  
+  // State for form fields - Spend Crypto
+  const [selectedNetwork, setSelectedNetwork] = useState('Base');
+  const [selectedToken, setSelectedToken] = useState('USDC');
+  const [amount, setAmount] = useState('0.5000');
+  const [transferType, setTransferType] = useState('bank');
+  const [currency, setCurrency] = useState('Br Ethiopian Birr (ETB)');
+  const [recipientBank, setRecipientBank] = useState('Select recipient bank');
+  const [recipientAccount, setRecipientAccount] = useState('12345678901');
+  const [memo, setMemo] = useState('');
+  
+  // Additional state for Buy Crypto
+  const [depositFrom, setDepositFrom] = useState('Commercial Bank of Ethiopia');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  
+  // Modal states
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [transactionData, setTransactionData] = useState<any>(null);
+
+  const handleDisconnect = () => {
+    disconnectWallet();
+    navigate('/');
+  };
+
+  // Format wallet address to show first 6 and last 4 characters
+  const formatWalletAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
+  const networks = [
+    { id: 'base', name: 'Base', selected: true },
+    { id: 'arbitrum', name: 'Arbitrum', selected: false },
+    { id: 'polygon', name: 'Polygon', selected: false }
+  ];
+
+  const banks = [
+    'Commercial Bank of Ethiopia',
+    'Telebirr',
+    'CBE Birr',
+    'Bank of Abyssinia',
+    'Awash Bank'
+  ];
+
+  const handleReviewInfo = () => {
+    const data = {
+      mode,
+      amount,
+      token: selectedToken,
+      network: selectedNetwork,
+      recipientBank: mode === 'spend' ? recipientBank : depositFrom,
+      recipientAccount: mode === 'spend' ? recipientAccount : phoneNumber,
+      memo
+    };
+    setTransactionData(data);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmTransaction = () => {
+    setShowConfirmModal(false);
+    // Simulate processing
+    setTimeout(() => {
+      setShowSuccessModal(true);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <header className="flex justify-between items-center p-4 border-b border-gray-800">
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-lime-400 to-lime-500 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+            <span className="text-gray-900 font-bold text-lg">S</span>
+          </div>
+          <div className="text-lime-400 font-semibold text-2xl tracking-wide">SemuniPay</div>
+        </div>
+        {account ? (
+          <div className="bg-gray-800 text-lime-400 font-medium px-4 py-2 rounded-full border border-gray-700">
+            {formatWalletAddress(account)}
+          </div>
+        ) : (
+          <button 
+            className="bg-lime-400 text-gray-900 font-semibold px-6 py-2 rounded-full hover:bg-lime-300 transition-all duration-300"
+            onClick={handleDisconnect}
+          >
+            Connect
+          </button>
+        )}
+      </header>
+
+      {/* Mode Toggle */}
+      <div className="max-w-5xl mx-auto px-4 pt-6 pb-3">
+        <div className="grid grid-cols-2 gap-2 bg-gray-800 rounded-lg p-1 max-w-xs mx-auto">
+          <button 
+            className={`py-1.5 rounded-lg flex items-center justify-center text-sm ${mode === 'spend' ? 'bg-lime-400 text-gray-900' : 'text-white'}`}
+            onClick={() => setMode('spend')}
+          >
+            <Send size={16} className="mr-1.5" />
+            Spend Crypto
+          </button>
+          <button 
+            className={`py-1.5 rounded-lg flex items-center justify-center text-sm ${mode === 'buy' ? 'bg-lime-400 text-gray-900' : 'text-white'}`}
+            onClick={() => setMode('buy')}
+          >
+            <CreditCard size={16} className="mr-1.5" />
+            Buy Crypto
+          </button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="max-w-5xl mx-auto px-4 py-3 grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Left panel */}
+        <div className="bg-gray-800/50 rounded-xl p-5">
+          {mode === 'spend' ? (
+            <>
+              {/* Network selection - Spend Crypto */}
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {networks.map(network => (
+                  <button
+                    key={network.id}
+                    className={`flex items-center px-3 py-1.5 rounded-full text-sm ${
+                      network.id === selectedNetwork.toLowerCase() 
+                        ? 'bg-lime-400 text-gray-900' 
+                        : 'bg-gray-700 text-white'
+                    }`}
+                    onClick={() => setSelectedNetwork(network.name)}
+                  >
+                    {network.id === selectedNetwork.toLowerCase() && (
+                      <Check size={14} className="mr-1" />
+                    )}
+                    {network.name}
+                  </button>
+                ))}
+                
+                <button className="flex items-center px-3 py-1.5 rounded-full bg-gray-700 text-white text-sm">
+                  More <ChevronDown size={14} className="ml-1" />
+                </button>
+              </div>
+              
+              {/* Token selection - Spend Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Token <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedToken}
+                    onChange={(e) => setSelectedToken(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  >
+                    <option value="USDC">USDC</option>
+                    <option value="ETH">ETH</option>
+                    <option value="BTC">BTC</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+              
+              {/* Amount input - Spend Crypto */}
+              <div>
+                <label className="block text-xs font-medium mb-1.5">
+                  Amount <span className="text-lime-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Token selection - Buy Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Token to Buy <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedToken}
+                    onChange={(e) => setSelectedToken(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  >
+                    <option value="USDC">USDC</option>
+                    <option value="ETH">ETH</option>
+                    <option value="BTC">BTC</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+              
+              {/* Amount input - Buy Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Amount <span className="text-lime-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                />
+              </div>
+              
+              {/* Deposit From - Buy Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Deposit From <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={depositFrom}
+                    onChange={(e) => setDepositFrom(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  >
+                    {banks.map(bank => (
+                      <option key={bank} value={bank}>{bank}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+              
+              {/* Phone Number - Buy Crypto */}
+              <div>
+                <label className="block text-xs font-medium mb-1.5">
+                  Phone Number <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+251 91 234 5678"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs">
+                    0/12
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        
+        {/* Right panel */}
+        <div className="bg-gray-800/50 rounded-xl p-5">
+          {mode === 'spend' ? (
+            <>
+              {/* Recipient details - Spend Crypto */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-medium">Recipient details</h2>
+                <Info size={16} className="text-gray-400" />
+              </div>
+              
+              {/* Transfer type tabs - Spend Crypto */}
+              <div className="grid grid-cols-2 gap-1 bg-gray-700 rounded-lg p-1 mb-4">
+                <button 
+                  className={`py-1.5 rounded-lg text-sm ${transferType === 'bank' ? 'bg-gray-600' : ''}`}
+                  onClick={() => setTransferType('bank')}
+                >
+                  Bank transfer
+                </button>
+                <button 
+                  className={`py-1.5 rounded-lg text-sm ${transferType === 'mobile' ? 'bg-gray-600' : ''}`}
+                  onClick={() => setTransferType('mobile')}
+                >
+                  Mobile money
+                </button>
+              </div>
+              
+              {/* Currency selection - Spend Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Currency <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  >
+                    <option value="Br Ethiopian Birr (ETB)">Br Ethiopian Birr (ETB)</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+              
+              {/* Recipient Bank - Spend Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Recipient Bank <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={recipientBank}
+                    onChange={(e) => setRecipientBank(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  >
+                    <option value="Select recipient bank">Select recipient bank</option>
+                    {banks.map(bank => (
+                      <option key={bank} value={bank}>{bank}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+              
+              {/* Recipient Account - Spend Crypto */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium mb-1.5">
+                  Recipient Account <span className="text-lime-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={recipientAccount}
+                    onChange={(e) => setRecipientAccount(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs">
+                    0/10
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Transaction Summary - Buy Crypto */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-medium">Transaction Summary</h2>
+                <Info size={16} className="text-gray-400" />
+              </div>
+              
+              <div className="bg-gray-700/50 rounded-lg p-3 mb-4">
+                <div className="flex justify-between mb-2 text-sm">
+                  <span className="text-gray-400">You pay</span>
+                  <span className="font-medium">25,000 ETB</span>
+                </div>
+                <div className="flex justify-between mb-2 text-sm">
+                  <span className="text-gray-400">Exchange rate</span>
+                  <span className="font-medium">1 USDC ≈ 50 ETB</span>
+                </div>
+                <div className="flex justify-between mb-2 text-sm">
+                  <span className="text-gray-400">Fee</span>
+                  <span className="font-medium">250 ETB</span>
+                </div>
+                <div className="border-t border-gray-600 my-2"></div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">You receive</span>
+                  <span className="font-medium text-lime-400">0.5000 USDC</span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-700/50 rounded-lg p-3 mb-4">
+                <div className="flex items-start">
+                  <div className="bg-gray-600 p-1.5 rounded-full mr-2 flex-shrink-0">
+                    <Info size={14} className="text-gray-300" />
+                  </div>
+                  <p className="text-xs text-gray-300">
+                    Funds will be deposited to your wallet after your payment is confirmed. This typically takes 5-10 minutes.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+          
+          {/* Memo field for both modes */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5">
+              Memo <span className="text-lime-400">*</span>
+            </label>
+            <div className="relative">
+              <textarea
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+                placeholder="Enter memo"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400 resize-none h-16"
+              />
+              <span className="absolute right-3 bottom-2 text-gray-400 text-xs">
+                0/25
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Bottom action button */}
+      <div className="max-w-5xl mx-auto px-4 py-5">
+        <div className="flex space-x-4">
+          <button 
+            onClick={handleReviewInfo}
+            className="flex-1 bg-lime-400 text-gray-900 font-semibold py-3 rounded-full hover:bg-lime-300 transition-all duration-300 text-sm"
+          >
+            Review info
+          </button>
+          <button 
+            onClick={() => navigate('/virtual-cards')}
+            className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800/50 transition-all duration-300 text-sm flex items-center"
+          >
+            <CreditCard size={16} className="mr-2" />
+            Virtual Cards
+          </button>
+        </div>
+      </div>
+      
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
+          <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md relative border border-gray-700/50 shadow-2xl">
+            <button 
+              onClick={() => setShowConfirmModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-white mb-2">Confirm Transaction</h3>
+              <p className="text-gray-400">Please review your transaction details</p>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="bg-gray-700/50 backdrop-blur-sm rounded-lg p-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Action:</span>
+                  <span className="text-white capitalize">{transactionData?.mode} Crypto</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Amount:</span>
+                  <span className="text-white">{transactionData?.amount} {transactionData?.token}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Network:</span>
+                  <span className="text-white">{transactionData?.network}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">
+                    {transactionData?.mode === 'spend' ? 'Recipient:' : 'From:'}
+                  </span>
+                  <span className="text-white">{transactionData?.recipientBank}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white py-3 rounded-lg hover:bg-gray-700/70 transition-all duration-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmTransaction}
+                className="flex-1 bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
+          <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md relative border border-gray-700/50 shadow-2xl">
+            <button 
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-lime-400/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="text-lime-400" size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Transaction Successful!</h3>
+              <p className="text-gray-400 mb-6">
+                Your {transactionData?.mode} transaction has been processed successfully.
+              </p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;
