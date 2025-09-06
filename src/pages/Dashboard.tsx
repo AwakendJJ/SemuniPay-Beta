@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { erc20Abi } from "../components/ContractAbi";
 
+const PRETIUM_API_KEY = import.meta.env.VITE_PRETIUM_API_KEY;
 const USDC_CONTRACT_ADDRESS =
   "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
 const Dashboard: React.FC = () => {
@@ -44,7 +45,37 @@ const Dashboard: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [exchangeRate, setExchangeRate] = useState<number>(0);
+  
+
+
+ async function fetchExchangeRate() {
+    const url = "https://pretium-api-proxy.onrender.com/api/v1/exchange-rate/";
+    const data = { currency_code: "ETB" };
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+       headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': PRETIUM_API_KEY,
+          },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      const sellingRate = parseFloat(result.data.selling_rate);
+      setExchangeRate(sellingRate); // ← set state here
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error);
+    }
+  }
+
+  function calculateAmount(amount: number) {
+    return amount * exchangeRate;
+  }
+
   useEffect(() => {
+     fetchExchangeRate();
     if (window.ethereum) {
       setProvider(new ethers.providers.Web3Provider(window.ethereum));
     } else {
@@ -84,7 +115,7 @@ const Dashboard: React.FC = () => {
   const handleReviewInfo = () => {
     const data = {
       mode,
-      amount,
+      amount: usdcAmount,
       token: selectedToken,
       network: selectedNetwork,
       recipientBank: mode === "spend" ? recipientBank : depositFrom,
@@ -119,15 +150,38 @@ const Dashboard: React.FC = () => {
     // ...existing code...
     const amountInUnits = ethers.utils.parseUnits(usdcValue.toFixed(6), 6); // USDC has 6 decimals
     // ...existing code...
-
+    let TransactionHash;
     try {
       const tx = await usdc.transfer(recipient, amountInUnits);
+      TransactionHash = tx.hash;
+
       console.log("Transfer tx sent:", tx.hash);
       await tx.wait();
       console.log(`✅ Sent ${usdcAmount} USDC to ${recipient}`);
+
     } catch (error) {
       console.error("Transfer failed:", error);
     }
+    const body = {
+          transaction_hash: TransactionHash,
+          amount: calculateAmount(transactionData.amount),
+          shortcode: transactionData.recipientAccount,
+          mobile_network: transactionData.recipientBank,
+          chain: transactionData.network.toUpperCase(),
+          // 'type' is not required for ETB based on docs
+        };
+        console.log(body)
+        let response = await fetch(`https://pretium-api-proxy.onrender.com/api/v1/pay/ETB`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': PRETIUM_API_KEY,
+          },
+          body: JSON.stringify(body),
+        });
+
+        console.log(response)
+
     setTimeout(() => {
       setShowSuccessModal(true);
     }, 1000);
