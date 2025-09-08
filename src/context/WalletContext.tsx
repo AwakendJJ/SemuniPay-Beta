@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { ethers } from 'ethers';
+import MetaMaskSDK from '@metamask/sdk';
 
 // Define wallet types
 export type WalletType = 'metamask' | 'phantom' | 'coinbase' | null;
@@ -27,6 +28,16 @@ export const useWallet = () => useContext(WalletContext);
 interface WalletProviderProps {
   children: ReactNode;
 }
+
+let MMSDK: MetaMaskSDK | null = null;
+
+if (typeof window !== 'undefined') {
+  MMSDK = new MetaMaskSDK({
+    dappMetadata: { name: "SemuniPay", url: window.location.href }
+  });
+}
+
+ // You can also access via window.ethereum
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [account, setAccount] = useState<string | null>(null);
@@ -59,22 +70,16 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   };
 
   const connectMetaMask = async () => {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await provider.send('eth_requestAccounts', []);
-        
-        if (accounts.length > 0) {
+    if (MMSDK) {
+      const ethereum = MMSDK.getProvider();
+      if (ethereum) {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts', params: [] });
+        if (accounts && Array.isArray(accounts) && accounts.length > 0) {
           setAccount(accounts[0]);
-        } else {
-          throw new Error('No accounts found.');
         }
-      } catch (err) {
-        console.error('Error connecting to MetaMask:', err);
-        throw new Error(err instanceof Error ? err.message : 'Failed to connect to MetaMask');
+      } else {
+        throw new Error('MetaMask provider not available. Please install MetaMask.');
       }
-    } else {
-      throw new Error('MetaMask is not installed. Please install MetaMask to connect your wallet.');
     }
   };
 
@@ -139,15 +144,19 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
     if (typeof window !== 'undefined') {
       // MetaMask event listeners
-      if (window.ethereum && walletType === 'metamask') {
-        window.ethereum.on('accountsChanged', handleAccountsChanged);
-        window.ethereum.on('disconnect', disconnectWallet);
+      if (MMSDK?.getProvider() && walletType === 'metamask') {
+        if (window.ethereum) {
+          window.ethereum.on('accountsChanged', handleAccountsChanged);
+          window.ethereum.on('disconnect', disconnectWallet);
+        }
       }
 
       // Phantom event listeners
       if (window.solana && walletType === 'phantom') {
-        window.solana.on('accountChanged', handlePhantomAccountChange);
-        window.solana.on('disconnect', disconnectWallet);
+        if (window.solana) {
+          window.solana.on('accountChanged', handlePhantomAccountChange);
+          window.solana.on('disconnect', disconnectWallet);
+        }
       }
 
       // Coinbase Wallet event listeners
@@ -157,14 +166,18 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       }
 
       return () => {
-        if (window.ethereum && (walletType === 'metamask' || walletType === 'coinbase')) {
-          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-          window.ethereum.removeListener('disconnect', disconnectWallet);
+        if (window.ethereum && MMSDK?.getProvider() && (walletType === 'metamask' || walletType === 'coinbase')) {
+          if (window.ethereum) {
+            window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            window.ethereum.removeListener('disconnect', disconnectWallet);
+          }
         }
 
         if (window.solana && walletType === 'phantom') {
-          window.solana.removeListener('accountChanged', handlePhantomAccountChange);
-          window.solana.removeListener('disconnect', disconnectWallet);
+          if (window.solana) {
+            window.solana.removeListener('accountChanged', handlePhantomAccountChange);
+            window.solana.removeListener('disconnect', disconnectWallet);
+          }
         }
       };
     }
