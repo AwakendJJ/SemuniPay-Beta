@@ -132,6 +132,45 @@ const Dashboard: React.FC = () => {
     }
   };
 
+const BASE_CHAIN_ID = "0x2105"; // 8453 in hex
+const BASE_RPC_URL = "https://mainnet.base.org";
+const BASE_NAME = "Base Mainnet";
+
+const ensureBaseNetwork = async () => {
+  if (!window.ethereum) throw new Error("No wallet found");
+
+  console.log("EnsureBaseNetwork")
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: BASE_CHAIN_ID }],
+    });
+  } catch (switchError: any) {
+    // If the chain is not added, add it
+    if (switchError.code === 4902) {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: BASE_CHAIN_ID,
+            chainName: BASE_NAME,
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            rpcUrls: [BASE_RPC_URL],
+            blockExplorerUrls: ["https://basescan.org"],
+          },
+        ],
+      });
+    } else {
+      throw switchError;
+    }
+  }
+};
+
+
   const handleConfirmTransaction = async () => {
     if (!window.ethereum) {
       console.error("No wallet found.");
@@ -139,11 +178,12 @@ const Dashboard: React.FC = () => {
     }
 
     setShowConfirmModal(false);
+    ensureBaseNetwork();
     const signer = await provider?.getSigner();
 
     const usdcValue = parseFloat(usdcAmount);
     if (isNaN(usdcValue) || usdcValue <= 0) {
-      console.error("Invalid USDC amount");
+      console.log("Invalid USDC amount");
       return;
     }
     const usdc = new ethers.Contract(USDC_CONTRACT_ADDRESS, erc20Abi, signer);
@@ -168,9 +208,9 @@ const Dashboard: React.FC = () => {
           shortcode: transactionData.recipientAccount,
           mobile_network: transactionData.recipientBank,
           chain: transactionData.network.toUpperCase(),
-          // 'type' is not required for ETB based on docs
+         
         };
-        console.log(body)
+        if(TransactionHash){
         let response = await fetch(`https://pretium-api-proxy.onrender.com/api/v1/pay/ETB`, {
           method: 'POST',
           headers: {
@@ -179,8 +219,10 @@ const Dashboard: React.FC = () => {
           },
           body: JSON.stringify(body),
         });
-
         console.log(response)
+        }
+
+        
 
     setTimeout(() => {
       setShowSuccessModal(true);
