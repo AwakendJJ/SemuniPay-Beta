@@ -184,7 +184,7 @@ const ensureBaseNetwork = async () => {
     const usdcValue = parseFloat(usdcAmount);
     if (isNaN(usdcValue) || usdcValue <= 0) {
       console.log("Invalid USDC amount");
-      return;
+      // return;
     }
     const usdc = new ethers.Contract(USDC_CONTRACT_ADDRESS, erc20Abi, signer);
     // ...existing code...
