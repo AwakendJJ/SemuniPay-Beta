@@ -1,31 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { useWallet, WalletType } from '../context/WalletContext';
+import React, { useEffect } from 'react';
+// import { useWallet, WalletType } from '../context/WalletContext';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { useAccount, useConnect } from "wagmi"
 
 const ConnectWallet: React.FC = () => {
-  const { account, connectWallet, isConnecting, error } = useWallet();
+ 
   const navigate = useNavigate();
-  const [selectedWallet, setSelectedWallet] = useState<WalletType>(null);
-
-  // Redirect to dashboard if already connected
+  const { address } = useAccount()
+  const { connectors, connect } = useConnect()
+  
+  
   useEffect(() => {
-    if (account) {
+    if (address) {
       navigate('/dashboard');
     }
-  }, [account, navigate]);
+  }, [address, navigate]);
 
-  const handleConnect = async (walletType: WalletType) => {
-    setSelectedWallet(walletType);
-    try {
-      await connectWallet(walletType);
-      // We don't need to navigate here as the useEffect will handle it
-      // when the account state updates
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      setSelectedWallet(null);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -50,42 +41,46 @@ const ConnectWallet: React.FC = () => {
               <h2 className="text-2xl font-bold mb-2">Connect to SemuniPay</h2>
               <p className="text-gray-400">Connect your wallet to access the SemuniPay platform</p>
             </div>
-            
+{/*             
             {error && (
               <div className="bg-red-900/30 border border-red-500 text-red-200 rounded-lg p-3 mb-6">
                 {error}
               </div>
-            )}
+            )} */}
             
             <div className="space-y-3">
               {/* MetaMask */}
-              <button
+              
+              {/* <button
                 onClick={() => handleConnect('metamask')}
                 disabled={isConnecting}
                 className={`flex items-center justify-between w-full bg-gray-700 hover:bg-gray-600 rounded-xl p-4 transition-colors ${
                   isConnecting && selectedWallet === 'metamask' ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
-              >
-                <div className="flex items-center">
+              > */}
+
+         {
+        connectors.map(connector => (
+          <button key={connector.uid} onClick={() => connect({ connector })}>
+            <div className="flex items-center">
                   <img 
                     src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
                     alt="MetaMask" 
                     className="w-8 h-8 mr-3"
                   />
                   <div className="text-left">
-                    <div className="font-semibold">MetaMask</div>
-                    <div className="text-xs text-gray-400">Connect using browser wallet</div>
+                    <div className="font-semibold">{connector.name}</div>
+                    <div className="text-xs text-gray-400">Connect using browser {connector.name}</div>
                   </div>
                 </div>
-                {isConnecting && selectedWallet === 'metamask' && (
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-              </button>
+          </button>
+        ))
+      }
+
+      
+               
               
-              {/* Phantom */}
+              {/* Phantom
               <button
                 onClick={() => handleConnect('phantom')}
                 disabled={isConnecting}
@@ -113,7 +108,7 @@ const ConnectWallet: React.FC = () => {
               </button>
               
               {/* Coinbase Wallet */}
-              <button
+              {/* <button
                 onClick={() => handleConnect('coinbase')}
                 disabled={isConnecting}
                 className={`flex items-center justify-between w-full bg-gray-700 hover:bg-gray-600 rounded-xl p-4 transition-colors ${
@@ -137,7 +132,8 @@ const ConnectWallet: React.FC = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 )}
-              </button>
+              </button> */} 
+
             </div>
             
             <div className="text-center text-xs text-gray-500 mt-4">
