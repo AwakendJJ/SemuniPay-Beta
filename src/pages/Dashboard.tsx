@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useWallet } from "../context/WalletContext";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
+import { useAccount, useDisconnect } from "wagmi"
 import {
   ChevronDown,
   Info,
@@ -17,7 +17,8 @@ const PRETIUM_API_KEY = import.meta.env.VITE_PRETIUM_API_KEY;
 const USDC_CONTRACT_ADDRESS =
   "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
 const Dashboard: React.FC = () => {
-  const { account, disconnectWallet } = useWallet();
+  const { address } = useAccount()
+  const { disconnect } = useDisconnect()
   const navigate = useNavigate();
 
   // Mode toggle (spend or buy crypto)
@@ -86,15 +87,15 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const handleDisconnect = () => {
-    disconnectWallet();
-    navigate("/");
+    console.log("handleDisconnect")
+    disconnect();
   };
 
   // Format wallet address to show first 6 and last 4 characters
-  const formatWalletAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.substring(0, 6)}...${address.substring(
-      address.length - 4
+  const formatWalletAddress = (wallet_address: string) => {
+    if (!wallet_address) return "";
+    return `${wallet_address.substring(0, 6)}...${wallet_address.substring(
+      wallet_address.length - 4
     )}`;
   };
 
@@ -132,44 +133,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-const BASE_CHAIN_ID = "0x2105"; // 8453 in hex
-const BASE_RPC_URL = "https://mainnet.base.org";
-const BASE_NAME = "Base Mainnet";
-
-const ensureBaseNetwork = async () => {
-  if (!window.ethereum) throw new Error("No wallet found");
-
-  console.log("EnsureBaseNetwork")
-  try {
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: BASE_CHAIN_ID }],
-    });
-  } catch (switchError: any) {
-    // If the chain is not added, add it
-    if (switchError.code === 4902) {
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: BASE_CHAIN_ID,
-            chainName: BASE_NAME,
-            nativeCurrency: {
-              name: "Ether",
-              symbol: "ETH",
-              decimals: 18,
-            },
-            rpcUrls: [BASE_RPC_URL],
-            blockExplorerUrls: ["https://basescan.org"],
-          },
-        ],
-      });
-    } else {
-      throw switchError;
-    }
-  }
-};
-
 
   const handleConfirmTransaction = async () => {
     if (!window.ethereum) {
@@ -178,7 +141,6 @@ const ensureBaseNetwork = async () => {
     }
 
     setShowConfirmModal(false);
-    ensureBaseNetwork();
     const signer = await provider?.getSigner();
 
     const usdcValue = parseFloat(usdcAmount);
@@ -280,17 +242,25 @@ const ensureBaseNetwork = async () => {
             SemuniPay
           </div>
         </div>
-        {account ? (
+        {address ? (
+          <div className="flex items-center space-x-3">
           <div className="bg-gray-800 text-lime-400 font-medium px-4 py-2 rounded-full border border-gray-700">
-            {formatWalletAddress(account)}
+            {formatWalletAddress(address)}
+          </div>
+           <button
+    className="bg-lime-400 text-gray-900 font-semibold px-6 py-2 rounded-full hover:bg-lime-300 transition-all duration-300"
+    onClick={() => handleDisconnect()}
+  >
+    Disconnect
+  </button>
           </div>
         ) : (
           <button
-            className="bg-lime-400 text-gray-900 font-semibold px-6 py-2 rounded-full hover:bg-lime-300 transition-all duration-300"
-            onClick={handleDisconnect}
-          >
-            Connect
-          </button>
+    className="bg-lime-400 text-gray-900 font-semibold px-6 py-2 rounded-full hover:bg-lime-300 transition-all duration-300"
+    onClick={() => navigate("/connect")}
+  >
+    Connect
+  </button>
         )}
       </header>
 
