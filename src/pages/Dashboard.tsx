@@ -5,9 +5,10 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { ChevronDown, Info, Check, X } from "lucide-react"
 import { ConnectKitButton } from "connectkit"
-import { useWriteContract, useWaitForTransactionReceipt, type BaseError } from "wagmi"
+import { useAccount,useWriteContract, useWaitForTransactionReceipt, type BaseError } from "wagmi"
 import { parseUnits } from "viem"
 import { fetchExchangeRate, submitPayment } from "./actions/pretium"
+import { base } from 'wagmi/chains'
 
 interface FormData {
   selectedNetwork: string
@@ -95,7 +96,7 @@ const Dashboard: React.FC = () => {
   }
 
   // Wagmi hooks for sending transactions
-  const { data: hash, error: transactionError, isPending: isTransactionPending, writeContract } = useWriteContract()
+  const { data: hash, error: transactionError, isPending: isTransactionPending, writeContractAsync } = useWriteContract()
 
   const RECIPIENT_ADDRESS = import.meta.env.VITE_RECIPIENT_ADDRESS
 
@@ -106,13 +107,15 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      if (!writeContract) throw new Error("Wallet not connected or write function unavailable")
+      
+      if (!writeContractAsync) throw new Error("Wallet not connected or write function unavailable")
 
-      writeContract({
+      writeContractAsync({
+        chainId: base.id,
         address: USDC_CONTRACT_ADDRESS,
         abi: erc20Abi,
         functionName: "transfer",
-        args: [RECIPIENT_ADDRESS, parseUnits(formData.amount, 6)], // USDC decimals
+        args: [RECIPIENT_ADDRESS, parseUnits(formData.amount, 6)], 
       })
     } catch (err) {
       console.error("Transaction error:", err)
