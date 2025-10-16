@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
   const [transactionData, setTransactionData] = useState<any>(null)
   const [exchangeRate, setExchangeRate] = useState(0)
 
-  const banks = ["Commercial Bank of Ethiopia", "Telebirr", "CBE Birr", "Bank of Abyssinia", "Awash Bank"]
+  const banks = ["Telebirr"]
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
