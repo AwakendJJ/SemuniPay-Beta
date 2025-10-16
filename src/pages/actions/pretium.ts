@@ -32,7 +32,7 @@ export async function submitPayment(paymentData: {
   amount: number
   shortcode: string
   mobile_network: string
-  chain: string
+  chain: "BASE"
 }) {
   try {
     const response = await fetch("https://pretium-api-proxy.onrender.com/api/v1/pay/ETB", {
