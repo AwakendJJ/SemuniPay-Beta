@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { ChevronDown, Info, Check, X } from "lucide-react"
 import { ConnectKitButton } from "connectkit"
-import { useWriteContract, useSendTransaction, useWaitForTransactionReceipt, type BaseError } from "wagmi"
+import { useWriteContract, useWaitForTransactionReceipt, type BaseError } from "wagmi"
 import { parseUnits } from "viem"
 import { fetchExchangeRate, submitPayment } from "./actions/pretium"
 
@@ -20,8 +20,7 @@ interface FormData {
   memo: string
 }
 
-const USDC_CONTRACT_ADDRESS =
-  "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
+const USDC_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`
 const erc20Abi = [
   {
     name: "transfer",
@@ -96,75 +95,86 @@ const Dashboard: React.FC = () => {
   }
 
   // Wagmi hooks for sending transactions
-  const {  data: hash, error: transactionError, isPending: isTransactionPending, writeContract } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  })
+  const { data: hash, error: transactionError, isPending: isTransactionPending, writeContract } = useWriteContract()
 
   const RECIPIENT_ADDRESS = import.meta.env.VITE_RECIPIENT_ADDRESS
-  
-  const handleConfirmTransaction = () => {
-  
 
-  if (!formData.amount) {
-    alert('Please enter an amount')
-    return
+  const handleConfirmTransaction = () => {
+    if (!formData.amount) {
+      alert("Please enter an amount")
+      return
+    }
+
+    try {
+      if (!writeContract) throw new Error("Wallet not connected or write function unavailable")
+
+      writeContract({
+        address: USDC_CONTRACT_ADDRESS,
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [RECIPIENT_ADDRESS, parseUnits(formData.amount, 6)], // USDC decimals
+      })
+    } catch (err) {
+      console.error("Transaction error:", err)
+      alert(`Transaction error: ${(err as Error).message}`)
+    }
   }
 
-  try {
-    if (!writeContract)
-      throw new Error('Wallet not connected or write function unavailable')
+  useEffect(() => {
+    if (hash) {
+      console.log("Transaction hash received:", hash)
+      setTransactionHash(hash)
+    }
+  }, [hash])
 
-    writeContract({
-      address: USDC_CONTRACT_ADDRESS,
-      abi: erc20Abi,
-      functionName: 'transfer',
-      args: [RECIPIENT_ADDRESS, parseUnits(formData.amount, 6)], // USDC decimals
-    })
+  const {
+    data: receipt,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    isError,
+  } = useWaitForTransactionReceipt({
+    hash: transactionHash as `0x${string}`,
+  })
 
-    if(hash){
+  useEffect(() => {
+    if (isConfirmed && transactionHash) {
+      console.log("[v0] Transaction confirmed, calling submitPayment")
+      // Call backend once
       submitPayment({
-        transaction_hash: hash,
-        amount: calculateAmount(parseFloat(formData.amount)),
+        transaction_hash: transactionHash,
+        amount: calculateAmount(Number.parseFloat(formData.amount)),
         chain: formData.selectedNetwork,
         shortcode: formData.recipientAccount,
         mobile_network: formData.recipientBank,
       })
-    }
-  } catch (err) {
-    console.error('Transaction error:', err)
-    alert(`Transaction error: ${(err as Error).message}`)
-  }
-}
 
-  
-  const updateRate = async () => {
-  try {
-    const result = await fetchExchangeRate() // await the Promise
-    const { rate, success } = result
-    if (success) {
-      setExchangeRate(rate)
-    } else {
-      console.error("Failed to fetch rate:", (result as any).error)
-    }
-  } catch (err) {
-    console.error("Error fetching rate:", err)
-  }
-}
-
-  function calculateAmount(amount: number) {
-    return amount * exchangeRate;
-  }
-  useEffect(() => {
-    updateRate()
-    
-    
-    if (isConfirmed && showConfirmModal) {
+      // Show success modal
       setShowConfirmModal(false)
       setShowSuccessModal(true)
-      setTransactionHash(hash || "")
     }
-  }, [isConfirmed, showConfirmModal, hash])
+  }, [isConfirmed, transactionHash])
+
+  const updateRate = async () => {
+    try {
+      const result = await fetchExchangeRate() // await the Promise
+      const { rate, success } = result
+      if (success) {
+        setExchangeRate(rate)
+      } else {
+        console.error("Failed to fetch rate:", (result as any).error)
+      }
+    } catch (err) {
+      console.error("Error fetching rate:", err)
+    }
+  }
+
+  function calculateAmount(amount: number) {
+    return amount * exchangeRate
+  }
+
+  useEffect(() => {
+    updateRate()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -361,7 +371,6 @@ const Dashboard: React.FC = () => {
                   <span className="text-gray-400">Recipient:</span>
                   <span className="text-white">{transactionData?.recipientBank}</span>
                 </div>
-              
               </div>
 
               {hash && (

@@ -2,6 +2,7 @@ import React from 'react';
 import { useWallet } from '../context/WalletContext';
 import { useNavigate } from 'react-router-dom';
 
+
 function HomePage() {
   const { account } = useWallet();
   const navigate = useNavigate();
