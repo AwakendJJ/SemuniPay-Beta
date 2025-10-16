@@ -139,14 +139,16 @@ const Dashboard: React.FC = () => {
     hash: transactionHash as `0x${string}`,
   })
 
+  
+
   useEffect(() => {
     if (isConfirmed && transactionHash) {
-      console.log("[v0] Transaction confirmed, calling submitPayment")
+      console.log("Transaction confirmed, calling submitPayment")
       // Call backend once
       submitPayment({
         transaction_hash: transactionHash,
         amount: calculateAmount(Number.parseFloat(formData.amount)),
-        chain: formData.selectedNetwork,
+        chain: "BASE",
         shortcode: formData.recipientAccount,
         mobile_network: formData.recipientBank,
       })
