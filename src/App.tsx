@@ -10,10 +10,10 @@ function App() {
     
        <Router>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/connect" element={<ConnectWallet />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/virtual-cards" element={<VirtualCards />} />
+          <Route path="/" element={<Dashboard />} />
+          {/* <Route path="/connect" element={<ConnectWallet />} /> */}
+          {/* <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/virtual-cards" element={<VirtualCards />} /> */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
