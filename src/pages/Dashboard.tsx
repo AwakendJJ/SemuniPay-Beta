@@ -1,25 +1,16 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { ChevronDown, Info, Check, X } from "lucide-react"
-import { ConnectKitButton } from "connectkit"
-import { useAccount,useWriteContract, useWaitForTransactionReceipt, type BaseError } from "wagmi"
-import { parseUnits } from "viem"
-import { fetchExchangeRate, submitPayment } from "./actions/pretium"
+import React, { useState, useEffect } from 'react';
+import { useWallet } from '../context/WalletContext';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Info, Check, ArrowLeft, CreditCard, Send, X, Clock, RefreshCw, ChevronUp } from 'lucide-react';
+import USDC from '../Images/USDC.png';
+import ETB from '../Images/ETB.jpeg';
+import Telebirr from '../Images/Telebirr.png';
+import { ConnectKitButton } from 'connectkit';
+import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { fetchExchangeRate, submitPayment } from './actions/pretium';
 import { base } from 'wagmi/chains'
+import { parseUnits } from 'viem';
 
-interface FormData {
-  selectedNetwork: string
-  selectedToken: string
-  amount: string
-  transferType: string
-  currency: string
-  recipientBank: string
-  recipientAccount: string
-  memo: string
-}
 
 const USDC_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`
 const erc20Abi = [
@@ -34,95 +25,153 @@ const erc20Abi = [
     outputs: [{ type: "bool" }],
   },
 ] as const
+
+ 
+
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  
+  // State for form fields
+  const [youPayAmount, setYouPayAmount] = useState('0.00');
+  const [selectedToken, setSelectedToken] = useState('USDC');
+  const [youReceiveAmount, setYouReceiveAmount] = useState('0.00');
+  const [selectedCurrency, setSelectedCurrency] = useState('ETB');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [recipientPhone, setRecipientPhone] = useState('');
+  const [conversionDirection, setConversionDirection] = useState<'pay' | 'receive'>('pay');
 
-  const [formData, setFormData] = useState<FormData>({
-    selectedNetwork: "Base",
-    selectedToken: "USDC",
-    amount: "0.5000",
-    transferType: "bank",
-    currency: "Br Ethiopian Birr (ETB)",
-    recipientBank: "Select recipient bank",
-    recipientAccount: "12345678901",
-    memo: "",
-  })
-
+  
   // Modal states
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [showTransactionModal, setShowTransactionModal] = useState(false)
-  const [usdcBalance, setUsdcBalance] = useState("0")
-  const [transactionHash, setTransactionHash] = useState("")
-  const [transactionData, setTransactionData] = useState<any>(null)
-  const [exchangeRate, setExchangeRate] = useState(0)
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState(0);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [usdcBalance, setUsdcBalance] = useState('0');
+  const [transactionHash, setTransactionHash] = useState('');
+  const [transactionData, setTransactionData] = useState<any>(null);
 
-  const banks = ["Telebirr"]
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // Validate form
-    if (formData.recipientBank === "Select recipient bank") {
-      alert("Please select a recipient bank")
-      return
-    }
-
-    if (!formData.recipientAccount) {
-      alert("Please enter a phone number")
-      return
-    }
-
-    // Prepare transaction data
-    const data = {
-      amount: formData.amount,
-      token: formData.selectedToken,
-      network: formData.selectedNetwork,
-      recipientBank: formData.recipientBank,
-      recipientAccount: formData.recipientAccount,
-      memo: formData.memo,
-    }
-
-    setTransactionData(data)
-    setShowConfirmModal(true)
-  }
-
-  // Wagmi hooks for sending transactions
   const { data: hash, error: transactionError, isPending: isTransactionPending, writeContractAsync } = useWriteContract()
 
-  const RECIPIENT_ADDRESS = import.meta.env.VITE_RECIPIENT_ADDRESS
-
-  const handleConfirmTransaction = () => {
-    if (!formData.amount) {
-      alert("Please enter an amount")
-      return
-    }
-
+  const updateRate = async () => {
     try {
-      
-      if (!writeContractAsync) throw new Error("Wallet not connected or write function unavailable")
-
-      writeContractAsync({
-        chainId: base.id,
-        address: USDC_CONTRACT_ADDRESS,
-        abi: erc20Abi,
-        functionName: "transfer",
-        args: [RECIPIENT_ADDRESS, parseUnits(formData.amount, 6)], 
-      })
+      const result = await fetchExchangeRate() 
+      const { rate, success } = result
+      if (success) {
+        setExchangeRate(rate)
+      } else {
+        console.error("Failed to fetch rate:", (result as any).error)
+      }
     } catch (err) {
-      console.error("Transaction error:", err)
-      alert(`Transaction error: ${(err as Error).message}`)
+      console.error("Error fetching rate:", err)
     }
   }
 
+  useEffect(() => {
+    updateRate()
+  }, [])
+
+  useEffect(() => {
+  if (exchangeRate <= 0) return;
+
+  if (conversionDirection === 'pay') {
+    const payAmount = parseFloat(youPayAmount) || 0;
+    const receiveAmount = payAmount * exchangeRate;
+    if(receiveAmount > 0){
+    setYouReceiveAmount(receiveAmount ? receiveAmount.toFixed(2) : '0.00');
+    }
+  } else {
+    const receiveAmount = parseFloat(youReceiveAmount) || 0;
+    const payAmount = receiveAmount / exchangeRate;
+    if(payAmount > 0){
+    setYouPayAmount(payAmount ? payAmount.toFixed(2) : '0.00');
+    }
+  }
+}, [youPayAmount, youReceiveAmount, exchangeRate, conversionDirection]);
+
+
+  
+
+  // const loadUSDCBalance = async () => {
+  //   try {
+  //     const balance = await getUSDCBalance();
+  //     setUsdcBalance(balance);
+  //   } catch (error) {
+  //     console.error('Failed to load USDC balance:', error);
+  //   }
+  // };
+
+  // const handleDisconnect = () => {
+  //   disconnectWallet();
+  //   navigate('/connect');
+  // };
+
+
+  const paymentMethods = [
+    { id: 'telebirr', name: 'Telebirr', icon: Telebirr},
+    { id: 'cbe-birr', name: 'CBE Birr', icon: '🏦' }
+    
+  ];
+
+  const selectedMethod = paymentMethods.find((m) => m.name === selectedPaymentMethod);
+
+  const handlePaymentMethodSelect = (method: any) => {
+    setSelectedPaymentMethod(method.name);
+    setShowPaymentMethods(false);
+  };
+
+  const handleSellCrypto = () => {
+    if (!selectedPaymentMethod || !recipientPhone || !youPayAmount || parseFloat(youPayAmount) <= 0) {
+      return;
+    }
+
+    const data = {
+      amount: youPayAmount,
+      token: selectedToken,
+      receiveAmount: youReceiveAmount,
+      currency: selectedCurrency,
+      paymentMethod: selectedPaymentMethod,
+      recipientPhone: recipientPhone
+    };
+    setTransactionData(data);
+    setShowConfirmModal(true);
+  };
+
+
+  
+   const RECIPIENT_ADDRESS = import.meta.env.VITE_RECIPIENT_ADDRESS
+
+  const handleConfirmTransaction = async () => {
+  try {
+  
+
+    if (!youPayAmount || isNaN(Number(youPayAmount))) {
+      alert("Please enter a valid amount")
+      return
+    }
+
+    if (!RECIPIENT_ADDRESS) {
+      alert("Recipient address is missing")
+      return
+    }
+
+    const hash = await writeContractAsync({
+      chainId: base.id,
+      address: USDC_CONTRACT_ADDRESS,
+      abi: erc20Abi,
+      functionName: "transfer",
+      args: [RECIPIENT_ADDRESS, parseUnits(youReceiveAmount, 6)],
+    })
+
+    console.log("Transaction hash:", hash)
+    setTransactionHash(hash)
+  } catch (err) {
+    console.error("Transaction error:", err)
+    alert(`Transaction error: ${(err as Error).message}`)
+  }
+}
+
+console.log("Transaction Error: ", transactionError)
   useEffect(() => {
     if (hash) {
       console.log("Transaction hash received:", hash)
@@ -147,10 +196,10 @@ const Dashboard: React.FC = () => {
       // Call backend once
       submitPayment({
         transaction_hash: transactionHash,
-        amount: calculateAmount(Number.parseFloat(formData.amount)),
+        amount: calculateAmount(Number.parseFloat(youReceiveAmount)),
         chain: "BASE",
-        shortcode: formData.recipientAccount,
-        mobile_network: formData.recipientBank,
+        shortcode: selectedPaymentMethod,
+        mobile_network: recipientPhone,
       })
 
       // Show success modal
@@ -159,289 +208,288 @@ const Dashboard: React.FC = () => {
     }
   }, [isConfirmed, transactionHash])
 
-  const updateRate = async () => {
-    try {
-      const result = await fetchExchangeRate() // await the Promise
-      const { rate, success } = result
-      if (success) {
-        setExchangeRate(rate)
-      } else {
-        console.error("Failed to fetch rate:", (result as any).error)
-      }
-    } catch (err) {
-      console.error("Error fetching rate:", err)
-    }
-  }
-
+  
   function calculateAmount(amount: number) {
     return amount * exchangeRate
   }
 
-  useEffect(() => {
-    updateRate()
-  }, [])
-
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <header className="flex justify-between items-center p-4 border-b border-gray-800">
+      <header className="flex justify-between items-center p-6 border-b border-gray-800/50">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-lime-400 to-lime-500 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-            <span className="text-gray-900 font-bold text-lg">S</span>
+          <div className="w-12 h-12 bg-gradient-to-br from-lime-400 to-lime-500 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+            <span className="text-gray-900 font-bold text-xl">S</span>
           </div>
-          <div className="text-lime-400 font-semibold text-2xl tracking-wide">SemuniPay</div>
+          <div className="text-lime-400 font-bold text-3xl tracking-wide">SemuniPay</div>
         </div>
-        <div className="flex items-center space-x-3">
-          <ConnectKitButton />
+        
+        <div className="flex items-center space-x-4">
+          <ConnectKitButton/>
         </div>
       </header>
 
-      <form onSubmit={handleSubmit}>
-        {/* Main content */}
-        <div className="max-w-5xl mx-auto px-4 py-3 grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Left panel */}
-          <div className="bg-gray-800/50 rounded-xl p-5">
-            {/* Network selection */}
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              <button
-                type="button"
-                className="flex items-center px-3 py-1.5 rounded-full text-sm bg-lime-400 text-gray-900"
-              >
-                <Check size={14} className="mr-1" />
-                Base
-              </button>
-            </div>
-
-            {/* Token selection */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5">
-                Token <span className="text-lime-400">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  name="selectedToken"
-                  value={formData.selectedToken}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  required
-                >
-                  <option value="USDC">USDC</option>
-                  <option value="ETH">ETH</option>
-                  <option value="BTC">BTC</option>
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Amount input */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5">
-                Amount <span className="text-lime-400">*</span>
-              </label>
-              <input
-                type="text"
-                name="amount"
-                value={formData.amount}
-                onChange={handleInputChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Right panel */}
-          <div className="bg-gray-800/50 rounded-xl p-5">
-            {/* Recipient details */}
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-medium">Recipient details</h2>
-              <Info size={16} className="text-gray-400" />
-            </div>
-
-            {/* Mobile Money Label */}
-            <div className="mb-4">
-              <div className="text-sm font-medium text-gray-300">Mobile Money Transfer</div>
-            </div>
-
-            {/* Currency selection */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5">
-                Currency <span className="text-lime-400">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  required
-                >
-                  <option value="Br Ethiopian Birr (ETB)">Br Ethiopian Birr (ETB)</option>
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Recipient Bank */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5">
-                Recipient Bank <span className="text-lime-400">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  name="recipientBank"
-                  value={formData.recipientBank}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  required
-                >
-                  <option value="Select recipient bank">Select recipient bank</option>
-                  {banks.map((bank) => (
-                    <option key={bank} value={bank}>
-                      {bank}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Recipient Account */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5">
-                Phone Number <span className="text-lime-400">*</span>
-              </label>
-              <div className="relative">
+      {/* Main Content */}
+      <div className="max-w-2xl mx-auto px-6 py-12">
+        <div className="bg-gray-800/30 backdrop-blur-md rounded-3xl p-8 border border-gray-700/30 shadow-2xl">
+          
+          {/* You Pay Section */}
+          {/* <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+              YOU PAY
+            </label>
+            <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
+              <div className="flex items-center justify-between">
                 <input
-                  type="text"
-                  name="recipientAccount"
-                  value={formData.recipientAccount}
-                  onChange={handleInputChange}
-                  placeholder="+251 91 234 5678"
-                  maxLength={12}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  required
+                  type="number"
+                  value={youPayAmount}
+                  onChange={(e) => setYouPayAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="bg-transparent text-4xl font-bold text-white placeholder-gray-500 focus:outline-none flex-1 mr-3"
                 />
-                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs">
-                  {formData.recipientAccount.length}/12
-                </span>
+                <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-500/30">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-2">
+                    <span className="text-white text-xs font-bold">$</span>
+                  </div>
+                  <span className="font-semibold text-white">{selectedToken}</span>
+                  <ChevronDown size={16} className="ml-2 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div> */}
+          
+          {/* You Pay Section */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+              YOU PAY
+            </label>
+            <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 mr-4">
+                  <input
+                    type="number"
+                    value={youPayAmount}
+                    onChange={(e) =>{
+                       setConversionDirection('pay');
+                      setYouPayAmount(e.target.value);
+                    }}
+                    placeholder="0.00"
+                    className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-500/30">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2 overflow-hidden">
+                    <img src={USDC} alt="USDC" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="font-semibold text-white">{selectedToken}</span>
+                  <ChevronDown size={16} className="ml-2 text-gray-400" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Bottom action button */}
-        <div className="max-w-5xl mx-auto px-4 py-5">
+          {/* Exchange Rate */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="flex items-center bg-gray-700/20 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-600/20">
+              <RefreshCw size={16} className="text-lime-400 mr-2" />
+              <span className="text-sm text-gray-300">1 USD = {exchangeRate} ETB</span>
+            </div>
+          </div>
+
+          {/* You Receive Section */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+              YOU RECEIVE
+            </label>
+            <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 mr-4">
+                  <input
+                    type="text"
+                    value={youReceiveAmount}
+                    onChange={(e) => {
+                      setConversionDirection('receive');
+                      setYouReceiveAmount(e.target.value);
+                    }
+                  }
+                    className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-500/30">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2 overflow-hidden">
+                    <img src={ETB} alt="ETB" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="font-semibold text-white">{selectedCurrency}</span>
+                  <ChevronDown size={16} className="ml-2 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Method Selection */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+              CHOOSE YOUR PAYMENT METHOD
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowPaymentMethods(!showPaymentMethods)}
+                className="w-full bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30 flex items-center justify-between hover:bg-gray-700/40 transition-all duration-300"
+              >
+                <div className="flex items-center">
+                  {selectedPaymentMethod ? (
+                    <>
+                      <div className="w-10 h-10 bg-gray-600/50 rounded-full flex items-center justify-center mr-4 overflow-hidden">
+                        {selectedMethod && typeof selectedMethod.icon === 'string' && selectedMethod.icon.endsWith('.png') ? (
+                          <img src={selectedMethod.icon as any} alt={selectedPaymentMethod} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">{selectedMethod && typeof selectedMethod.icon === 'string' && !selectedMethod.icon.endsWith('.png') ? selectedMethod.icon : '🏦'}</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold text-left">{selectedPaymentMethod}</div>
+                        <div className="text-gray-400 text-sm">Selected to use</div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-400">Select payment method</div>
+                  )}
+                </div>
+                <ChevronDown size={20} className="text-gray-400" />
+              </button>
+
+              {/* Payment Methods Dropdown */}
+              {showPaymentMethods && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800/90 backdrop-blur-md rounded-2xl border border-gray-700/50 shadow-2xl z-10 overflow-hidden">
+                  {paymentMethods.map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => handlePaymentMethodSelect(method)}
+                      className="w-full p-4 flex items-center hover:bg-gray-700/50 transition-all duration-300 border-b border-gray-700/30 last:border-b-0"
+                    >
+                      <div className="w-8 h-8 bg-gray-600/50 rounded-full flex items-center justify-center mr-3 overflow-hidden">
+                        {typeof method.icon === 'string' && (method.icon.endsWith('.png') || method.icon.endsWith('.jpg') || method.icon.endsWith('.jpeg') || method.icon.endsWith('.svg')) ? (
+                          <img src={method.icon} alt={method.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-lg">{typeof method.icon === 'string' ? method.icon : '🏦'}</span>
+                        )}
+                      </div>
+                      <span className="text-white font-medium">{method.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recipient Phone Number */}
+          {selectedPaymentMethod && (
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+                RECIPIENT PHONE NUMBER
+              </label>
+              <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
+                <input
+                  type="tel"
+                  value={recipientPhone}
+                  onChange={(e) => setRecipientPhone(e.target.value)}
+                  placeholder="+251 91 234 5678"
+                  className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Fee Quote */}
+          <div className="mb-8">
+            <div className="bg-gray-700/20 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/20">
+              <h3 className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">
+                TOTAL FEE QUOTE
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <span className="text-gray-300">Processing fees</span>
+                    <Info size={14} className="ml-2 text-gray-500" />
+                  </div>
+                  <span className="text-white font-medium">
+                   0.0 ETB
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <span className="text-gray-300">Estimated Onchain fees</span>
+                    <Info size={14} className="ml-2 text-gray-500" />
+                  </div>
+                  <span className="text-white font-medium">0.00 ETB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sell Button */}
           <button
-            type="submit"
-            className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-full hover:bg-lime-300 transition-all duration-300 text-sm"
+            onClick={handleSellCrypto}
+            disabled={ !selectedPaymentMethod || !recipientPhone || !youPayAmount || parseFloat(youPayAmount) <= 0}
+            className="w-full bg-lime-400 text-gray-900 font-bold py-4 rounded-2xl hover:bg-lime-300 transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            Review info
+            {/* {isTransacting ? 'Processing...' : 'Sell Crypto'} */}
+            Sell Crypto
           </button>
         </div>
-      </form>
+      </div>
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
           <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md relative border border-gray-700/50 shadow-2xl">
-            <button
+            <button 
               onClick={() => setShowConfirmModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"
             >
               <X size={20} />
             </button>
-
+            
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-white mb-2">Confirm Transaction</h3>
               <p className="text-gray-400">Please review your transaction details</p>
             </div>
-
+            
             <div className="space-y-4 mb-6">
               <div className="bg-gray-700/50 backdrop-blur-sm rounded-lg p-4">
                 <div className="flex justify-between mb-2">
-                  <span className="text-gray-400">Action:</span>
-                  <span className="text-white">Send ETB</span>
+                  <span className="text-gray-400">You Pay:</span>
+                  <span className="text-white">{transactionData?.amount} {transactionData?.token}</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-gray-400">Amount:</span>
-                  <span className="text-white">
-                    {transactionData?.amount} {transactionData?.token}
-                  </span>
+                  <span className="text-gray-400">You Receive:</span>
+                  <span className="text-white">{transactionData?.receiveAmount} {transactionData?.currency}</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-gray-400">Network:</span>
-                  <span className="text-white">{transactionData?.network}</span>
+                  <span className="text-gray-400">Payment Method:</span>
+                  <span className="text-white">{transactionData?.paymentMethod}</span>
                 </div>
-                <div className="flex justify-between mb-2">
+                <div className="flex justify-between">
                   <span className="text-gray-400">Recipient:</span>
-                  <span className="text-white">{transactionData?.recipientBank}</span>
+                  <span className="text-white">{transactionData?.recipientPhone}</span>
                 </div>
               </div>
-
-              {hash && (
-                <div className="bg-gray-700/50 backdrop-blur-sm rounded-lg p-4">
-                  <div className="text-sm text-gray-400 mb-2">Transaction Hash:</div>
-                  <div className="text-xs text-white break-all">{hash}</div>
-                </div>
-              )}
-
-              {isConfirming && <div className="text-center text-lime-400 text-sm">Waiting for confirmation...</div>}
-
-              {isConfirmed && (
-                <div className="text-center text-lime-400 text-sm flex items-center justify-center">
-                  <Check size={16} className="mr-2" />
-                  Transaction confirmed!
-                </div>
-              )}
-
-              {transactionError && (
-                <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4">
-                  <div className="text-red-400 text-sm">
-                    Error: {(transactionError as BaseError).shortMessage || transactionError.message}
-                  </div>
-                </div>
-              )}
             </div>
-
-            <button
-              onClick={handleConfirmTransaction}
-              disabled={isTransactionPending || isConfirming}
-              className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isTransactionPending ? "Confirming in wallet..." : isConfirming ? "Processing..." : "Confirm & Send"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
-          <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md relative border border-gray-700/50 shadow-2xl">
-            <button
-              onClick={() => setShowSuccessModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-lime-400/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="text-lime-400" size={32} />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Transaction Successful!</h3>
-              <p className="text-gray-400 mb-6">Your Send ETB transaction has been processed successfully.</p>
-              {transactionHash && (
-                <div className="bg-gray-700/50 rounded-lg p-3 mb-6">
-                  <div className="text-xs text-gray-400 mb-1">Transaction Hash:</div>
-                  <div className="text-xs text-white break-all">{transactionHash}</div>
-                </div>
-              )}
+            
+            <div className="flex space-x-3">
               <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isTransactionPending}
+                className="flex-1 bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 text-white py-3 rounded-lg hover:bg-gray-700/70 transition-all duration-300"
               >
-                Continue
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmTransaction}
+                className="flex-1 bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300"
+                disabled={isTransactionPending}
+              >
+                {isTransactionPending ? 'Processing...' : 'Confirm'}
               </button>
             </div>
           </div>
@@ -452,20 +500,26 @@ const Dashboard: React.FC = () => {
       {showTransactionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
           <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md relative border border-gray-700/50 shadow-2xl">
-            <button
+            <button 
               onClick={() => setShowTransactionModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"
             >
               <X size={20} />
             </button>
-
+            
             <div className="text-center">
               <div className="w-16 h-16 bg-lime-400/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="text-lime-400" size={32} />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">Transaction Sent!</h3>
-              <p className="text-gray-400 mb-4">Your USDC transaction has been submitted to the Base network.</p>
-              {transactionHash && <p className="text-xs text-gray-500 mb-6 break-all">TX: {transactionHash}</p>}
+              <p className="text-gray-400 mb-4">
+                Your crypto sale has been submitted to the Base network.
+              </p>
+              {transactionHash && (
+                <p className="text-xs text-gray-500 mb-6 break-all">
+                  TX: {transactionHash}
+                </p>
+              )}
               <button
                 onClick={() => setShowTransactionModal(false)}
                 className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300"
@@ -477,7 +531,7 @@ const Dashboard: React.FC = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
