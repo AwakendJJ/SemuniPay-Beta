@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
 
 
   const paymentMethods = [
-    { id: 'telebirr', name: 'Telebirr', icon: USDC},
+    { id: 'telebirr', name: 'Telebirr', icon: Telebirr},
     { id: 'cbe-birr', name: 'CBE Birr', icon: '🏦' }
     
   ];
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
       address: USDC_CONTRACT_ADDRESS,
       abi: erc20Abi,
       functionName: "transfer",
-      args: [RECIPIENT_ADDRESS, parseUnits(youReceiveAmount, 6)],
+      args: [RECIPIENT_ADDRESS, parseUnits(youPayAmount, 6)],
     })
 
     console.log("Transaction hash:", hash)
