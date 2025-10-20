@@ -1,8 +1,6 @@
 "use server"
 
 const PRETIUM_API_KEY =  import.meta.env.VITE_PRETIUM_API_KEY;
-console.log(PRETIUM_API_KEY)
-
 
 export async function fetchExchangeRate(currencyCode = "ETB") {
   const url = "https://pretium-api-proxy.onrender.com/api/v1/exchange-rate/"
@@ -19,8 +17,8 @@ export async function fetchExchangeRate(currencyCode = "ETB") {
     })
 
     const result = await response.json()
-    const sellingRate = Number.parseFloat(result.data.selling_rate)
-    return { success: true, rate: sellingRate }
+    const buying_rate = Number.parseFloat(result.data.buying_rate)
+    return { success: true, rate: buying_rate }
   } catch (error) {
     console.error("Error fetching exchange rate:", error)
     return { success: false, rate: 0, error: "Failed to fetch exchange rate" }
