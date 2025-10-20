@@ -29,7 +29,7 @@ const erc20Abi = [
  
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
+  
   
   // State for form fields
   const [youPayAmount, setYouPayAmount] = useState('0.00');
@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
 
 
   const paymentMethods = [
-    { id: 'telebirr', name: 'Telebirr', icon: Telebirr},
+    { id: 'telebirr', name: 'Telebirr', icon: USDC},
     { id: 'cbe-birr', name: 'CBE Birr', icon: '🏦' }
     
   ];
