@@ -171,7 +171,6 @@ const Dashboard: React.FC = () => {
   }
 }
 
-console.log("Transaction Error: ", transactionError)
   useEffect(() => {
     if (hash) {
       console.log("Transaction hash received:", hash)
@@ -196,10 +195,10 @@ console.log("Transaction Error: ", transactionError)
       // Call backend once
       submitPayment({
         transaction_hash: transactionHash,
-        amount: calculateAmount(Number.parseFloat(youReceiveAmount)),
+        amount: Number.parseFloat(youReceiveAmount),
         chain: "BASE",
-        shortcode: selectedPaymentMethod,
-        mobile_network: recipientPhone,
+        shortcode: recipientPhone,
+        mobile_network:selectedPaymentMethod ,
       })
 
       // Show success modal
@@ -209,10 +208,6 @@ console.log("Transaction Error: ", transactionError)
   }, [isConfirmed, transactionHash])
 
   
-  function calculateAmount(amount: number) {
-    return amount * exchangeRate
-  }
-
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
