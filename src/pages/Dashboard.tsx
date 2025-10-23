@@ -10,6 +10,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { fetchExchangeRate, submitPayment } from './actions/pretium';
 import { base } from 'wagmi/chains'
 import { parseUnits } from 'viem';
+import { BasenameConnectButton } from "../components/BaseNameConnectButton";
 
 
 const USDC_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`
@@ -109,7 +110,6 @@ const Dashboard: React.FC = () => {
 
   const paymentMethods = [
     { id: 'telebirr', name: 'Telebirr', icon: Telebirr},
-    { id: 'cbe-birr', name: 'CBE Birr', icon: '🏦' }
     
   ];
 
@@ -211,7 +211,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <header className="flex justify-between items-center p-6 border-b border-gray-800/50">
+      <header className="flex justify-between items-center p-6">
         <div className="flex items-center">
           <div className="w-12 h-12 bg-gradient-to-br from-lime-400 to-lime-500 rounded-xl flex items-center justify-center mr-4 shadow-lg">
             <span className="text-gray-900 font-bold text-xl">S</span>
@@ -220,12 +220,12 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <ConnectKitButton/>
+          <BasenameConnectButton/>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-2xl mx-auto px-6 py-2">
         <div className="bg-gray-800/30 backdrop-blur-md rounded-3xl p-8 border border-gray-700/30 shadow-2xl">
           
           {/* You Pay Section */}
@@ -254,7 +254,7 @@ const Dashboard: React.FC = () => {
           </div> */}
           
           {/* You Pay Section */}
-          <div className="mb-8">
+          <div className="mb-4">
             <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
               YOU PAY
             </label>
@@ -284,7 +284,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Exchange Rate */}
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center justify-center mb-4">
             <div className="flex items-center bg-gray-700/20 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-600/20">
               <RefreshCw size={16} className="text-lime-400 mr-2" />
               <span className="text-sm text-gray-300">1 USD = {exchangeRate} ETB</span>
@@ -292,7 +292,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* You Receive Section */}
-          <div className="mb-8">
+          <div className="mb-4">
             <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
               YOU RECEIVE
             </label>
@@ -322,7 +322,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Payment Method Selection */}
-          <div className="mb-8">
+          <div className="mb-4">
             <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
               CHOOSE YOUR PAYMENT METHOD
             </label>
@@ -396,7 +396,7 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* Fee Quote */}
-          <div className="mb-8">
+          <div className="mb-4">
             <div className="bg-gray-700/20 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/20">
               <h3 className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">
                 TOTAL FEE QUOTE
@@ -429,7 +429,7 @@ const Dashboard: React.FC = () => {
             className="w-full bg-lime-400 text-gray-900 font-bold py-4 rounded-2xl hover:bg-lime-300 transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
           >
             {/* {isTransacting ? 'Processing...' : 'Sell Crypto'} */}
-            Sell Crypto
+            Send ETB
           </button>
         </div>
       </div>
