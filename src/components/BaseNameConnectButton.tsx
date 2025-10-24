@@ -1,48 +1,104 @@
 import { ConnectKitButton } from "connectkit";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
-import { usePublicClient } from "wagmi";
-import { toCoinType, type Address } from "viem";
-import { base, type Chain } from "viem/chains";
+import { createPublicClient, http, toCoinType, type Address } from "viem";
+import { mainnet, base } from "viem/chains";
 
-// Styled-component remains the same
+// --------------------------------------------
+// 1. Setup Viem Client (MUST BE L1 MAINNET FOR ENS)
+// --------------------------------------------
+// ENS usually lives on L1. To resolve standard ENS names (including Basenames
+// that rely on L1 registry), you need an Ethereum Mainnet RPC.
+
+// Create the client outside the component to avoid recreating it on every render
+const client = createPublicClient({
+  chain: mainnet,
+  transport: http(
+    "https://eth-mainnet.g.alchemy.com/v2/JZdCvs5d3Bb7I4rSCPmUslVo6N0Xn4wO"
+  ), // or Infura, or any public RPC
+});
+// --------------------------------------------
+// 2. Custom Hook for fetching Basename
+// --------------------------------------------
+const useBasename = (address: Address | undefined) => {
+  const [basename, setBasename] = useState<string | null | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (!address) {
+      setBasename(null);
+      return;
+    }
+
+    setBasename(undefined); // Start loading
+
+    let isMounted = true;
+
+    const fetchBasename = async () => {
+      console.log("Fetching Basename for address:", address);
+      try {
+        const name = await client.getEnsName({
+          address: "0xDa4fb8852589B89AE52829D604962FdC2C6dCcbB",
+          // asking L1 ENS: "What name is associated with this address for the BASE chain?"
+          coinType: toCoinType(base.id),
+        });
+
+        console.log("Fetched Basename:", name);
+        if (isMounted) setBasename(name);
+      } catch (error) {
+        console.error("Error fetching Basename:", error);
+        if (isMounted) setBasename(null);
+      }
+    };
+
+    fetchBasename();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [address]);
+
+  return basename;
+};
+
+// --------------------------------------------
+// 3. Styled Components
+// --------------------------------------------
 const StyledButton = styled.button`
   cursor: pointer;
   position: relative;
   display: inline-block;
   padding: 14px 24px;
   color:rgb(0, 0, 0);
-  background: #A3E635;
+  background: #A3E635; 
   font-size: 16px;
-  font-weight: 500;
-  border-radius: 10rem;
-  
+  font-weight: 600;
+  border-radius: 100px;
+  border: none;
+  transition: all 200ms ease;
 
-  transition: 200ms ease;
   &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 6px 40px -6px rgb(17, 48, 79);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 82, 255, 0.3);
   }
   &:active {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 32px -6px rgb(12, 34, 55);
+    transform: translateY(0px);
   }
 `;
 
-// 1. Define a TypeScript interface for our component's props.
-// This matches the shape of the render props from ConnectKitButton.
-interface ButtonRendererProps {
+// --------------------------------------------
+// 4. Button Renderer
+// --------------------------------------------
+type ButtonRendererProps = {
   isConnected: boolean;
   isConnecting: boolean;
   show?: () => void;
-  hide?: () => void;
-  address?: 0xDa4fb8852589B89AE52829D604962FdC2C6dCcbB;
-  ensName?: string | null;
+  address?: Address;
+  ensName?: string;
   truncatedAddress?: string;
-  chain?: Chain & { unsupported?: boolean };
-}
+};
 
-// 2. Apply the interface to the component's props.
 const ButtonRenderer = ({
   isConnected,
   isConnecting,
@@ -50,79 +106,53 @@ const ButtonRenderer = ({
   address,
   ensName,
   truncatedAddress,
-  chain,
 }: ButtonRendererProps) => {
-  const [basename, setBasename] = useState<string | null>(null);
-  const publicClient = usePublicClient({ chainId: base.id });
+  // Use our custom hook to get the Basename
+  const basename = useBasename(address);
 
-  useEffect(() => {
-    console.log("BaseName useEffect triggered:", { address, chainId: chain?.id, baseId: base.id });
-    
-    if (!address || chain?.id !== base.id) {
-      console.log("Not on Base chain or no address, clearing basename");
-      setBasename(null);
-      return;
-    }
+  // Decide what text to display based on priority:
+  // 1. Connecting state
+  // 2. Loading state
+  // 3. Basename (if fetched)
+  // 4. ENS Name (from ConnectKit standard fetch)
+  // 5. Truncated Address (fallback)
+  // 6. "Connect Wallet" (if not connected)
+  const buttonText = useMemo(() => {
+    if (isConnecting) return "Connecting...";
+    if (!isConnected) return "Connect Wallet";
+    if (basename === undefined) return "Loading...";
+    return basename ?? ensName ?? truncatedAddress;
+  }, [isConnecting, isConnected, basename, ensName, truncatedAddress]);
 
-    const fetchBasename = async () => {
-      try {
-        if (!publicClient) {
-          console.log("No public client available");
-          return;
-        }
-        
-        console.log("Fetching Base Name for address:", address);
-        
-        // Use the Base documentation approach for Base Name resolution
-        const name = await publicClient.getEnsName({
-          address: address,
-          coinType: toCoinType(base.id),
-        });
-        
-        console.log("Base Name result:", name);
-        setBasename(name);
-        
-      } catch (error) {
-        console.error("Error fetching Basename:", error);
-        console.log("This might be due to RPC endpoint not supporting Base Names");
-        setBasename(null);
-      }
-    };
-
-    fetchBasename();
-  }, [address, chain, publicClient]);
-
-  // Prioritize Base Names when on Base chain, then ENS names, then truncated address
-  const buttonText = isConnected
-    ? basename ?? ensName ?? truncatedAddress
-    : "Connect Wallet";
-
-  console.log("Button text calculation:", { 
-    isConnected, 
-    basename, 
-    ensName, 
-    truncatedAddress, 
-    finalText: buttonText,
-    chainName: chain?.name,
-    chainId: chain?.id
-  });
-
-  return (
-    // 3. Safely call the optional `show` function.
-    <StyledButton onClick={() => show?.()}>
-      {isConnecting ? "Connecting..." : buttonText}
-    </StyledButton>
-  );
+  return <StyledButton onClick={show}>{buttonText}</StyledButton>;
 };
-
+// --------------------------------------------
+// 5. Exported Component
+// --------------------------------------------
 export const BasenameConnectButton = () => {
   return (
     <ConnectKitButton.Custom>
-      {(props) => <ButtonRenderer {...props} />}
+      {({
+        isConnected,
+        isConnecting,
+        show,
+        address,
+        ensName,
+        truncatedAddress,
+      }) => {
+        // Ensure address is cast to the correct type if necessary,
+        // though ConnectKit usually provides standard 0x strings.
+        return (
+          <ButtonRenderer
+            isConnected={isConnected}
+            isConnecting={isConnecting}
+            show={show}
+            address={address as Address}
+            ensName={ensName}
+            truncatedAddress={truncatedAddress}
+          />
+        );
+      }}
     </ConnectKitButton.Custom>
   );
 };
-
-// Note: This component is named BasenameConnectButton but currently doesn't resolve Base Names
-// due to Base network not supporting standard ENS infrastructure. It will fall back to
-// ENS names from other chains or truncated addresses when connected to Base.
