@@ -36,7 +36,7 @@ interface ButtonRendererProps {
   isConnecting: boolean;
   show?: () => void;
   hide?: () => void;
-  address?: Address;
+  address?: 0xDa4fb8852589B89AE52829D604962FdC2C6dCcbB;
   ensName?: string | null;
   truncatedAddress?: string;
   chain?: Chain & { unsupported?: boolean };

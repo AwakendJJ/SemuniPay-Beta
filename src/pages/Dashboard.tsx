@@ -213,7 +213,7 @@ const Dashboard: React.FC = () => {
        {/* Header */}
        <header className="flex justify-between items-center p-6">
          <div className="flex items-center">
-           <div className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-lg overflow-hidden">
+           <div className="w-16 h-16  flex items-center justify-center  shadow-lg overflow-hidden">
              <img src={SemuniLogo} alt="SemuniPay Logo" className="w-full h-full object-contain" />
            </div>
            <div className="text-lime-400 font-bold text-3xl tracking-wide">SemuniPay</div>
