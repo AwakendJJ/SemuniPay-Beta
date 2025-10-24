@@ -73,14 +73,18 @@ const ButtonRenderer = ({
         
         console.log("Fetching Base Name for address:", address);
         
-        // Base Names are not resolved through standard ENS infrastructure
-        // They use a different system. For now, we'll skip Base Name resolution
-        // and rely on ENS names from other chains or truncated addresses
-        console.log("Base Name resolution not supported - Base uses different naming system");
-        setBasename(null);
+        // Use the Base documentation approach for Base Name resolution
+        const name = await publicClient.getEnsName({
+          address: address,
+          coinType: toCoinType(base.id),
+        });
+        
+        console.log("Base Name result:", name);
+        setBasename(name);
         
       } catch (error) {
         console.error("Error fetching Basename:", error);
+        console.log("This might be due to RPC endpoint not supporting Base Names");
         setBasename(null);
       }
     };
@@ -88,10 +92,9 @@ const ButtonRenderer = ({
     fetchBasename();
   }, [address, chain, publicClient]);
 
-  // For Base chain, we'll prioritize ENS names from other chains or use truncated address
-  // Base Names are not currently supported through standard ENS infrastructure
+  // Prioritize Base Names when on Base chain, then ENS names, then truncated address
   const buttonText = isConnected
-    ? ensName ?? truncatedAddress
+    ? basename ?? ensName ?? truncatedAddress
     : "Connect Wallet";
 
   console.log("Button text calculation:", { 
