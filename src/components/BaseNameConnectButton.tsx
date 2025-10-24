@@ -56,19 +56,29 @@ const ButtonRenderer = ({
   const publicClient = usePublicClient({ chainId: base.id });
 
   useEffect(() => {
+    console.log("BaseName useEffect triggered:", { address, chainId: chain?.id, baseId: base.id });
+    
     if (!address || chain?.id !== base.id) {
+      console.log("Not on Base chain or no address, clearing basename");
       setBasename(null);
       return;
     }
 
     const fetchBasename = async () => {
       try {
-        if (!publicClient) return;
-        const name = await publicClient.getEnsName({
-          address: address, // No need for `as Address` now
-          coinType: toCoinType(base.id),
-        });
-        setBasename(name);
+        if (!publicClient) {
+          console.log("No public client available");
+          return;
+        }
+        
+        console.log("Fetching Base Name for address:", address);
+        
+        // Base Names are not resolved through standard ENS infrastructure
+        // They use a different system. For now, we'll skip Base Name resolution
+        // and rely on ENS names from other chains or truncated addresses
+        console.log("Base Name resolution not supported - Base uses different naming system");
+        setBasename(null);
+        
       } catch (error) {
         console.error("Error fetching Basename:", error);
         setBasename(null);
@@ -78,9 +88,21 @@ const ButtonRenderer = ({
     fetchBasename();
   }, [address, chain, publicClient]);
 
+  // For Base chain, we'll prioritize ENS names from other chains or use truncated address
+  // Base Names are not currently supported through standard ENS infrastructure
   const buttonText = isConnected
-    ? basename ?? ensName ?? truncatedAddress
+    ? ensName ?? truncatedAddress
     : "Connect Wallet";
+
+  console.log("Button text calculation:", { 
+    isConnected, 
+    basename, 
+    ensName, 
+    truncatedAddress, 
+    finalText: buttonText,
+    chainName: chain?.name,
+    chainId: chain?.id
+  });
 
   return (
     // 3. Safely call the optional `show` function.
@@ -97,3 +119,7 @@ export const BasenameConnectButton = () => {
     </ConnectKitButton.Custom>
   );
 };
+
+// Note: This component is named BasenameConnectButton but currently doesn't resolve Base Names
+// due to Base network not supporting standard ENS infrastructure. It will fall back to
+// ENS names from other chains or truncated addresses when connected to Base.
