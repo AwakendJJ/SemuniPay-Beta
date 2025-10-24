@@ -44,7 +44,6 @@ const Dashboard: React.FC = () => {
 
   
   // Modal states
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(0);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -203,7 +202,7 @@ const Dashboard: React.FC = () => {
 
       // Show success modal
       setShowConfirmModal(false)
-      setShowSuccessModal(true)
+      setShowTransactionModal(true)
     }
   }, [isConfirmed, transactionHash])
 
@@ -497,7 +496,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md relative border border-gray-700/50 shadow-2xl">
             <button 
               onClick={() => setShowTransactionModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
             >
               <X size={20} />
             </button>
@@ -506,20 +505,55 @@ const Dashboard: React.FC = () => {
               <div className="w-16 h-16 bg-lime-400/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="text-lime-400" size={32} />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Transaction Sent!</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">Payment Successful!</h3>
               <p className="text-gray-400 mb-4">
-                Your crypto sale has been submitted to the Base network.
+                Your USDC has been sent and ETB will be delivered to {recipientPhone}
               </p>
+              
+              {/* Transaction Details */}
+              <div className="bg-gray-700/50 backdrop-blur-sm rounded-lg p-4 mb-4 text-left">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Amount Sent:</span>
+                    <span className="text-white font-medium">{youPayAmount} USDC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Amount Received:</span>
+                    <span className="text-white font-medium">{youReceiveAmount} ETB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Payment Method:</span>
+                    <span className="text-white font-medium">{selectedPaymentMethod}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Recipient:</span>
+                    <span className="text-white font-medium">{recipientPhone}</span>
+                  </div>
+                </div>
+              </div>
+
               {transactionHash && (
-                <p className="text-xs text-gray-500 mb-6 break-all">
-                  TX: {transactionHash}
-                </p>
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Transaction Hash:</p>
+                  <p className="text-xs text-gray-400 break-all bg-gray-700/30 p-2 rounded">
+                    {transactionHash}
+                  </p>
+                </div>
               )}
+              
               <button
-                onClick={() => setShowTransactionModal(false)}
-                className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300"
+                onClick={() => {
+                  setShowTransactionModal(false);
+                  // Reset form for next transaction
+                  setYouPayAmount('0.00');
+                  setYouReceiveAmount('0.00');
+                  setSelectedPaymentMethod('');
+                  setRecipientPhone('');
+                  setTransactionHash('');
+                }}
+                className="w-full bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg hover:bg-lime-300 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                Continue
+                Make Another Payment
               </button>
             </div>
           </div>
