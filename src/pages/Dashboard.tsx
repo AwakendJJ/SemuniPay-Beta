@@ -5,6 +5,7 @@ import { ChevronDown, Info, Check, ArrowLeft, CreditCard, Send, X, Clock, Refres
 import USDC from '../Images/USDC.png';
 import ETB from '../Images/ETB.jpeg';
 import Telebirr from '../Images/Telebirr.png';
+import SemuniLogo from '../Images/semunipaylogo.png';
 import { ConnectKitButton } from 'connectkit';
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { fetchExchangeRate, submitPayment } from './actions/pretium';
@@ -33,9 +34,9 @@ const Dashboard: React.FC = () => {
   
   
   // State for form fields
-  const [youPayAmount, setYouPayAmount] = useState('0.00');
+  const [youPayAmount, setYouPayAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState('USDC');
-  const [youReceiveAmount, setYouReceiveAmount] = useState('0.00');
+  const [youReceiveAmount, setYouReceiveAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('ETB');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
@@ -209,14 +210,14 @@ const Dashboard: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="flex justify-between items-center p-6">
-        <div className="flex items-center">
-          <div className="w-12 h-12 bg-gradient-to-br from-lime-400 to-lime-500 rounded-xl flex items-center justify-center mr-4 shadow-lg">
-            <span className="text-gray-900 font-bold text-xl">S</span>
-          </div>
-          <div className="text-lime-400 font-bold text-3xl tracking-wide">SemuniPay</div>
-        </div>
+       {/* Header */}
+       <header className="flex justify-between items-center p-6">
+         <div className="flex items-center">
+           <div className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-lg overflow-hidden">
+             <img src={SemuniLogo} alt="SemuniPay Logo" className="w-full h-full object-contain" />
+           </div>
+           <div className="text-lime-400 font-bold text-3xl tracking-wide">SemuniPay</div>
+         </div>
         
         <div className="flex items-center space-x-4">
           <BasenameConnectButton/>
@@ -306,6 +307,7 @@ const Dashboard: React.FC = () => {
                       setYouReceiveAmount(e.target.value);
                     }
                   }
+                  placeholder="0.00"
                     className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
                   />
                 </div>
