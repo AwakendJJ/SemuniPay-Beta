@@ -39,7 +39,7 @@ const useBasename = (address: Address | undefined) => {
       console.log("Fetching Basename for address:", address);
       try {
         const name = await client.getEnsName({
-          address: "0xDa4fb8852589B89AE52829D604962FdC2C6dCcbB",
+          address: address,
           // asking L1 ENS: "What name is associated with this address for the BASE chain?"
           coinType: toCoinType(base.id),
         });
