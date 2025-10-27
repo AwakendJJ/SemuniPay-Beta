@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
     setTransactionHash(hash)
   } catch (err) {
     console.error("Transaction error:", err)
-    alert(`Transaction error: ${(err as Error).message}`)
+    // alert(`Transaction error: ${(err as Error).message}`)
   }
 }
 
