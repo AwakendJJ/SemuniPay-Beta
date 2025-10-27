@@ -13,7 +13,7 @@ export default function AuthCallback() {
       const session = data.session
       if (session) {
         // Send token to backend to create cookie
-        await fetch('http://localhost:3001/api/session', {
+        await fetch('http://localhost:5000/api/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include', // enable cookies
