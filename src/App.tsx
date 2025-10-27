@@ -4,6 +4,9 @@ import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
 import ConnectWallet from './pages/ConnectWallet';
 import VirtualCards from './pages/VirtualCards';
+import Login from './pages/Login';
+import AuthCallback from './AuthCallback';
+
 
 function App() {
   return (
@@ -11,6 +14,8 @@ function App() {
        <Router>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<Login/>} />
+           <Route path="/auth/callback" element={<AuthCallback />} />
           {/* <Route path="/connect" element={<ConnectWallet />} /> */}
           {/* <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/virtual-cards" element={<VirtualCards />} /> */}
