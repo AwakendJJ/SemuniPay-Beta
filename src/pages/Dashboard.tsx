@@ -211,22 +211,22 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
        {/* Header */}
-       <header className="flex justify-between items-center p-6">
+       <header className="flex justify-between items-center px-4 py-3 sm:px-6 sm:py-4">
          <div className="flex items-center">
-           <div className="w-16 h-16  flex items-center justify-center  shadow-lg overflow-hidden">
+           <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg overflow-hidden">
              <img src={SemuniLogo} alt="SemuniPay Logo" className="w-full h-full object-contain" />
            </div>
-           <div className="text-lime-400 font-bold text-3xl tracking-wide">SemuniPay</div>
+           <div className="text-lime-400 font-bold text-xl sm:text-2xl tracking-wide ml-2 sm:ml-3">SemuniPay</div>
          </div>
-        
-        <div className="flex items-center space-x-4">
-          <BasenameConnectButton/>
-        </div>
-      </header>
+         
+         <div className="flex items-center">
+           <BasenameConnectButton/>
+         </div>
+       </header>
 
-      {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-6 py-2">
-        <div className="bg-gray-800/30 backdrop-blur-md rounded-3xl p-8 border border-gray-700/30 shadow-2xl">
+       {/* Main Content */}
+       <div className="max-w-lg sm:max-w-xl lg:max-w-2xl mx-auto px-4 sm:px-6 py-2">
+         <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-gray-700/30 shadow-2xl">
           
           {/* You Pay Section */}
           {/* <div className="mb-8">
@@ -253,148 +253,148 @@ const Dashboard: React.FC = () => {
             </div>
           </div> */}
           
-          {/* You Pay Section */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
-              YOU PAY
-            </label>
-            <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 mr-4">
-                  <input
-                    type="number"
-                    value={youPayAmount}
-                    onChange={(e) =>{
-                       setConversionDirection('pay');
-                      setYouPayAmount(e.target.value);
-                    }}
-                    placeholder="0.00"
-                    className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
-                  />
-                </div>
-                <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-500/30">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2 overflow-hidden">
-                    <img src={USDC} alt="USDC" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="font-semibold text-white">{selectedToken}</span>
-                  <ChevronDown size={16} className="ml-2 text-gray-400" />
-                </div>
-              </div>
-            </div>
-          </div>
+           {/* You Pay Section */}
+           <div className="mb-3 sm:mb-4">
+             <label className="block text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3 uppercase tracking-wider">
+               YOU PAY
+             </label>
+             <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
+               <div className="flex items-center justify-between">
+                 <div className="flex-1 mr-3 sm:mr-4">
+                   <input
+                     type="number"
+                     value={youPayAmount}
+                     onChange={(e) =>{
+                        setConversionDirection('pay');
+                       setYouPayAmount(e.target.value);
+                     }}
+                     placeholder="0.00"
+                     className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none"
+                   />
+                 </div>
+                 <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 border border-gray-500/30">
+                   <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center mr-2 overflow-hidden">
+                     <img src={USDC} alt="USDC" className="w-full h-full object-cover" />
+                   </div>
+                   <span className="font-semibold text-white text-sm sm:text-base">{selectedToken}</span>
+                   <ChevronDown size={14} className="ml-1 sm:ml-2 text-gray-400" />
+                 </div>
+               </div>
+             </div>
+           </div>
 
-          {/* Exchange Rate */}
-          <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center bg-gray-700/20 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-600/20">
-              <RefreshCw size={16} className="text-lime-400 mr-2" />
-              <span className="text-sm text-gray-300">1 USD = {exchangeRate} ETB</span>
-            </div>
-          </div>
+           {/* Exchange Rate */}
+           <div className="flex items-center justify-center mb-3 sm:mb-4">
+             <div className="flex items-center bg-gray-700/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-600/20">
+               <RefreshCw size={14} className="text-lime-400 mr-1.5 sm:mr-2" />
+               <span className="text-xs sm:text-sm text-gray-300">1 USD = {exchangeRate} ETB</span>
+             </div>
+           </div>
 
-          {/* You Receive Section */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
-              YOU RECEIVE
-            </label>
-            <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 mr-4">
-                  <input
-                    type="text"
-                    value={youReceiveAmount}
-                    onChange={(e) => {
-                      setConversionDirection('receive');
-                      setYouReceiveAmount(e.target.value);
-                    }
-                  }
-                  placeholder="0.00"
-                    className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
-                  />
-                </div>
-                <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-500/30">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2 overflow-hidden">
-                    <img src={ETB} alt="ETB" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="font-semibold text-white">{selectedCurrency}</span>
-                  <ChevronDown size={16} className="ml-2 text-gray-400" />
-                </div>
-              </div>
-            </div>
-          </div>
+           {/* You Receive Section */}
+           <div className="mb-3 sm:mb-4">
+             <label className="block text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3 uppercase tracking-wider">
+               YOU RECEIVE
+             </label>
+             <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
+               <div className="flex items-center justify-between">
+                 <div className="flex-1 mr-3 sm:mr-4">
+                   <input
+                     type="text"
+                     value={youReceiveAmount}
+                     onChange={(e) => {
+                       setConversionDirection('receive');
+                       setYouReceiveAmount(e.target.value);
+                     }
+                   }
+                   placeholder="0.00"
+                     className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none"
+                   />
+                 </div>
+                 <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 border border-gray-500/30">
+                   <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center mr-2 overflow-hidden">
+                     <img src={ETB} alt="ETB" className="w-full h-full object-cover" />
+                   </div>
+                   <span className="font-semibold text-white text-sm sm:text-base">{selectedCurrency}</span>
+                   <ChevronDown size={14} className="ml-1 sm:ml-2 text-gray-400" />
+                 </div>
+               </div>
+             </div>
+           </div>
 
-          {/* Payment Method Selection */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
-              CHOOSE YOUR PAYMENT METHOD
-            </label>
-            <div className="relative">
-              <button
-                onClick={() => setShowPaymentMethods(!showPaymentMethods)}
-                className="w-full bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30 flex items-center justify-between hover:bg-gray-700/40 transition-all duration-300"
-              >
-                <div className="flex items-center">
-                  {selectedPaymentMethod ? (
-                    <>
-                      <div className="w-10 h-10 bg-gray-600/50 rounded-full flex items-center justify-center mr-4 overflow-hidden">
-                        {selectedMethod && typeof selectedMethod.icon === 'string' && selectedMethod.icon.endsWith('.png') ? (
-                          <img src={selectedMethod.icon as any} alt={selectedPaymentMethod} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-2xl">{selectedMethod && typeof selectedMethod.icon === 'string' && !selectedMethod.icon.endsWith('.png') ? selectedMethod.icon : '🏦'}</span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold text-left">{selectedPaymentMethod}</div>
-                        <div className="text-gray-400 text-sm">Selected to use</div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-gray-400">Select payment method</div>
-                  )}
-                </div>
-                <ChevronDown size={20} className="text-gray-400" />
-              </button>
+           {/* Payment Method Selection */}
+           <div className="mb-3 sm:mb-4">
+             <label className="block text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3 uppercase tracking-wider">
+               CHOOSE YOUR PAYMENT METHOD
+             </label>
+             <div className="relative">
+               <button
+                 onClick={() => setShowPaymentMethods(!showPaymentMethods)}
+                 className="w-full bg-gray-700/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30 flex items-center justify-between hover:bg-gray-700/40 transition-all duration-300"
+               >
+                 <div className="flex items-center">
+                   {selectedPaymentMethod ? (
+                     <>
+                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-600/50 rounded-full flex items-center justify-center mr-3 sm:mr-4 overflow-hidden">
+                         {selectedMethod && typeof selectedMethod.icon === 'string' && selectedMethod.icon.endsWith('.png') ? (
+                           <img src={selectedMethod.icon as any} alt={selectedPaymentMethod} className="w-full h-full object-cover" />
+                         ) : (
+                           <span className="text-lg sm:text-2xl">{selectedMethod && typeof selectedMethod.icon === 'string' && !selectedMethod.icon.endsWith('.png') ? selectedMethod.icon : '🏦'}</span>
+                         )}
+                       </div>
+                       <div>
+                         <div className="text-white font-semibold text-left text-sm sm:text-base">{selectedPaymentMethod}</div>
+                         <div className="text-gray-400 text-xs sm:text-sm">Selected to use</div>
+                       </div>
+                     </>
+                   ) : (
+                     <div className="text-gray-400 text-sm sm:text-base">Select payment method</div>
+                   )}
+                 </div>
+                 <ChevronDown size={18} className="text-gray-400" />
+               </button>
 
-              {/* Payment Methods Dropdown */}
-              {showPaymentMethods && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800/90 backdrop-blur-md rounded-2xl border border-gray-700/50 shadow-2xl z-10 overflow-hidden">
-                  {paymentMethods.map((method) => (
-                    <button
-                      key={method.id}
-                      onClick={() => handlePaymentMethodSelect(method)}
-                      className="w-full p-4 flex items-center hover:bg-gray-700/50 transition-all duration-300 border-b border-gray-700/30 last:border-b-0"
-                    >
-                      <div className="w-8 h-8 bg-gray-600/50 rounded-full flex items-center justify-center mr-3 overflow-hidden">
-                        {typeof method.icon === 'string' && (method.icon.endsWith('.png') || method.icon.endsWith('.jpg') || method.icon.endsWith('.jpeg') || method.icon.endsWith('.svg')) ? (
-                          <img src={method.icon} alt={method.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-lg">{typeof method.icon === 'string' ? method.icon : '🏦'}</span>
-                        )}
-                      </div>
-                      <span className="text-white font-medium">{method.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+               {/* Payment Methods Dropdown */}
+               {showPaymentMethods && (
+                 <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800/90 backdrop-blur-md rounded-xl sm:rounded-2xl border border-gray-700/50 shadow-2xl z-10 overflow-hidden">
+                   {paymentMethods.map((method) => (
+                     <button
+                       key={method.id}
+                       onClick={() => handlePaymentMethodSelect(method)}
+                       className="w-full p-3 sm:p-4 flex items-center hover:bg-gray-700/50 transition-all duration-300 border-b border-gray-700/30 last:border-b-0"
+                     >
+                       <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-600/50 rounded-full flex items-center justify-center mr-3 overflow-hidden">
+                         {typeof method.icon === 'string' && (method.icon.endsWith('.png') || method.icon.endsWith('.jpg') || method.icon.endsWith('.jpeg') || method.icon.endsWith('.svg')) ? (
+                           <img src={method.icon} alt={method.name} className="w-full h-full object-cover" />
+                         ) : (
+                           <span className="text-sm sm:text-lg">{typeof method.icon === 'string' ? method.icon : '🏦'}</span>
+                         )}
+                       </div>
+                       <span className="text-white font-medium text-sm sm:text-base">{method.name}</span>
+                     </button>
+                   ))}
+                 </div>
+               )}
+             </div>
+           </div>
 
-          {/* Recipient Phone Number */}
-          {selectedPaymentMethod && (
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
-                RECIPIENT PHONE NUMBER
-              </label>
-              <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
-                <input
-                  type="tel"
-                  value={recipientPhone}
-                  onChange={(e) => setRecipientPhone(e.target.value)}
-                  placeholder="+251 91 234 5678"
-                  className="w-full bg-transparent text-xl text-white placeholder-gray-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          )}
+           {/* Recipient Phone Number */}
+           {selectedPaymentMethod && (
+             <div className="mb-6 sm:mb-8">
+               <label className="block text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3 uppercase tracking-wider">
+                 RECIPIENT PHONE NUMBER
+               </label>
+               <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
+                 <input
+                   type="tel"
+                   value={recipientPhone}
+                   onChange={(e) => setRecipientPhone(e.target.value)}
+                   placeholder="+251 91 234 5678"
+                   className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none"
+                 />
+               </div>
+             </div>
+           )}
 
           {/* Fee Quote */}
           <div className="mb-4">
