@@ -51,8 +51,6 @@ const Dashboard: React.FC = () => {
   const [usdcBalance, setUsdcBalance] = useState('0');
   const [transactionHash, setTransactionHash] = useState('');
   const [transactionData, setTransactionData] = useState<any>(null);
-  // Email capture modal (frontend only)
-  const [showEmailModal, setShowEmailModal] = useState(true);
   const [emailInput, setEmailInput] = useState('');
   const [emailError, setEmailError] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
@@ -125,22 +123,7 @@ const Dashboard: React.FC = () => {
     setShowPaymentMethods(false);
   };
 
-  // Email capture handlers (no backend yet)
-  const handleEmailChange = (value: string) => {
-    setEmailInput(value);
-    if (!value) {
-      setEmailError('Email is required');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setEmailError(emailRegex.test(value) ? '' : 'Enter a valid email');
-  };
-
-  const handleSendMagicLink = () => {
-    if (emailError || !emailInput) return;
-    setEmailSubmitted(true);
-    setTimeout(() => setShowEmailModal(false), 1200);
-  };
+  
 
   const handleSellCrypto = () => {
     if (!selectedPaymentMethod || !recipientPhone || !youPayAmount || parseFloat(youPayAmount) <= 0) {
@@ -595,43 +578,7 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Email Capture (Magic Link) - Blocking Modal, Frontend only */}
-      {showEmailModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-xl mx-4 rounded-3xl border border-gray-700/70 shadow-2xl bg-gray-900/95 p-8 sm:p-10 text-center">
-            <div className="mb-2">
-              <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Access SemuniPay</h3>
-            </div>
-            <p className="text-gray-300 text-base sm:text-lg mb-8">
-              Enter your email and we’ll send you a secure magic link to continue.
-            </p>
-
-            <label className="block text-sm sm:text-base font-semibold text-gray-200 mb-3">Email Address</label>
-            <div className="bg-gray-800/70 rounded-2xl border border-gray-700 focus-within:border-lime-400 transition flex items-center justify-center">
-              <input
-                type="email"
-                value={emailInput}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-transparent text-white placeholder-gray-500 px-5 py-4 rounded-2xl focus:outline-none text-lg"
-              />
-            </div>
-            {emailError && <p className="mt-3 text-sm text-red-400">{emailError}</p>}
-
-            <button
-              onClick={handleSendMagicLink}
-              disabled={!!emailError || !emailInput}
-              className="mt-8 w-full px-6 py-4 rounded-2xl bg-lime-400 text-gray-900 font-extrabold text-lg shadow-lg hover:bg-lime-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {emailSubmitted ? 'Sent ✓' : 'Send magic link'}
-            </button>
-
-            <p className="mt-4 text-xs sm:text-sm text-gray-400">
-              By continuing, you agree to receive a one-time sign-in link. No passwords.
-            </p>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 };
