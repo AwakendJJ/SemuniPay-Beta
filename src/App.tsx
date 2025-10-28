@@ -5,6 +5,7 @@ import { supabase } from './supabaseClient';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import AuthCallback from './AuthCallback';
+import Loader from './components/Loader'
 import useJwtExpiryLogout from './hooks/useSessionTimeout';
 import type { User } from '@supabase/supabase-js';
 
@@ -44,7 +45,11 @@ function AppContent() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+ if (loading) {
+  return (
+    <Loader/>
+  );
+}
 
   return (
     <Routes>
