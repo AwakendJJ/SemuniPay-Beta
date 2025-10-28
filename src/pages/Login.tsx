@@ -1,10 +1,14 @@
-import { useState } from 'react'
-import {supabase} from '../supabaseClient'
+"use client"
 
+import type React from "react"
 
-export default function Login() {
-  const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
+import { useState } from "react"
+import { supabase } from "../supabaseClient"
+
+export default function LoginForm() {
+  const [email, setEmail] = useState("")
+  const [message, setMessage] = useState("")
+  const [isError, setIsError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const isValidEmail = (val: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(val)
@@ -12,32 +16,38 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!isValidEmail(email)) {
-      setMessage('Please enter a valid email')
+      setMessage("Please enter a valid email")
+      setIsError(true)
       return
     }
     setSubmitting(true)
-    setMessage('')
+    setMessage("")
+    setIsError(false)
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: ' http://localhost:5173/auth/callback' // redirect after clicking magic link
-      }
+        emailRedirectTo: " http://localhost:5173/auth/callback",
+      },
     })
-    if (error) setMessage(error.message)
-    else setMessage('Magic link sent! Check your email.')
+    if (error) {
+      setMessage(error.message)
+      setIsError(true)
+    } else {
+      setMessage("Magic link sent! Check your email.")
+      setIsError(false)
+    }
     setSubmitting(false)
   }
 
   return (
     <div className="min-h-screen bg-[#0A0F0D] text-white">
-      {/* Centered, modal-like card matching Dashboard popup style */}
       <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
         <div className="relative w-full max-w-xl mx-4 rounded-3xl border border-gray-700/70 shadow-2xl bg-gray-900/95 p-8 sm:p-10 text-center">
           <div className="mb-2">
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Access SemuniPay</h3>
           </div>
           <p className="text-gray-300 text-base sm:text-lg mb-8">
-            Enter your email and we’ll send you a secure magic link to continue.
+            Enter your email and we'll send you a secure magic link to continue.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -51,8 +61,17 @@ export default function Login() {
                 className="w-full bg-transparent text-white placeholder-gray-500 px-5 py-4 rounded-2xl focus:outline-none text-lg"
               />
             </div>
+
             {message && (
-              <p className="mt-3 text-sm text-gray-300">{message}</p>
+              <div
+                className={`mt-4 p-4 rounded-xl text-sm font-medium transition-all ${
+                  isError
+                    ? "bg-red-500/15 border border-red-500/30 text-red-300"
+                    : "bg-lime-400/15 border border-lime-400/30 text-lime-300"
+                }`}
+              >
+                {message}
+              </div>
             )}
 
             <button
@@ -60,7 +79,7 @@ export default function Login() {
               disabled={!isValidEmail(email) || submitting}
               className="mt-8 w-full px-6 py-4 rounded-2xl bg-lime-400 text-gray-900 font-extrabold text-lg shadow-lg hover:bg-lime-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              {submitting ? 'Sending…' : 'Send magic link'}
+              {submitting ? "Sending…" : "Send magic link"}
             </button>
           </form>
 
