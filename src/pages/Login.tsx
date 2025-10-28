@@ -11,7 +11,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: ' http://localhost:5174/auth/callback' // redirect after clicking magic link
+        emailRedirectTo: ' http://localhost:5173/auth/callback' // redirect after clicking magic link
       }
     })
     if (error) setMessage(error.message)
