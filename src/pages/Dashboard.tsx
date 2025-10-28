@@ -10,6 +10,8 @@ import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { fetchExchangeRate, submitPayment } from './actions/pretium';
 import { base } from 'wagmi/chains'
 import { parseUnits } from 'viem';
+import { supabase } from '../supabaseClient';
+import { User } from '@supabase/supabase-js';
 
 
 const USDC_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`
@@ -50,6 +52,8 @@ const Dashboard: React.FC = () => {
   const [usdcBalance, setUsdcBalance] = useState('0');
   const [transactionHash, setTransactionHash] = useState('');
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const { data: hash, error: transactionError, isPending: isTransactionPending, writeContractAsync } = useWriteContract()
 
@@ -66,6 +70,8 @@ const Dashboard: React.FC = () => {
       console.error("Error fetching rate:", err)
     }
   }
+
+   
 
   useEffect(() => {
     updateRate()
@@ -92,20 +98,49 @@ const Dashboard: React.FC = () => {
 
   
 
-  // const loadUSDCBalance = async () => {
-  //   try {
-  //     const balance = await getUSDCBalance();
-  //     setUsdcBalance(balance);
-  //   } catch (error) {
-  //     console.error('Failed to load USDC balance:', error);
-  //   }
-  // };
+  const navigate = useNavigate();
 
-  // const handleDisconnect = () => {
-  //   disconnectWallet();
-  //   navigate('/connect');
-  // };
+  useEffect(() => {
+    const initSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
 
+      if (error) {
+        console.error('Error getting session:', error);
+        navigate('/login');
+        return;
+      }
+
+      const session = data.session;
+
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+
+      setUser(session.user);
+      setLoading(false);
+    };
+
+    initSession();
+
+    // Listen for auth changes (login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate('/login');
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
   const paymentMethods = [
     { id: 'telebirr', name: 'Telebirr', icon: Telebirr},
