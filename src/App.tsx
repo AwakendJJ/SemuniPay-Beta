@@ -5,69 +5,61 @@ import { supabase } from './supabaseClient';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import AuthCallback from './AuthCallback';
+import useJwtExpiryLogout from './hooks/useSessionTimeout';
+import type { User } from '@supabase/supabase-js';
 
+// ⬇️ Split App into two layers so the hook runs inside the Router
 function App() {
-  const [user, setUser] = useState<any>(null);
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
+
+function AppContent() {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Now this runs inside the Router context — safe to use `useNavigate`
+  useJwtExpiryLogout();
+
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-       
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
+    // Initialize session on app load
+    async function getSession() {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) console.error('Error fetching session:', error);
 
-       
-        const res = await fetch('http://localhost:5000/api/protected', {
-          credentials: 'include',
-        });
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    }
 
-        if (!res.ok) {
-          setUser(null);
-        } else {
-          setUser(data.session.user);
-        }
-      } catch (err) {
-        console.error('Session validation error:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
+    getSession();
 
-      
-      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user || null);
-      });
+    // Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-      return () => listener.subscription.unsubscribe();
-    };
-
-    checkSession();
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   if (loading) return <p>Loading...</p>;
 
   return (
-    <Router>
-      <Routes>
-        
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+    <Routes>
+      {/* Login page */}
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
 
-      
-        <Route path="/auth/callback" element={<AuthCallback />} />
+      {/* Magic link callback */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
-       
-        <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
-    
+      {/* Protected dashboard */}
+      <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
 
-       
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
