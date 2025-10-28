@@ -17,7 +17,7 @@ export default function useJwtExpiryLogout(onSessionExpire?: () => void) {
     if (onSessionExpire) {
       onSessionExpire()
     } else {
-      alert("Session expired. Please log in again.")
+     navigate("/login")
     }
     await supabase.auth.signOut()
     navigate("/login")
