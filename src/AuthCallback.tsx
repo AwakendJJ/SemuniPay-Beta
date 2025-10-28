@@ -12,20 +12,14 @@ export default function AuthCallback() {
 
       const session = data.session
       if (session) {
-        // Send token to backend to create cookie
-        await fetch('http://localhost:5000/api/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // enable cookies
-          body: JSON.stringify({ access_token: session.access_token })
-        })
-
-        window.location.href = '/' // redirect home
+        window.location.href = '/' 
       }
     }
 
     handleAuth()
   }, [])
 
-  return <p>Signing you in...</p>
+  return <div className="loader">
+    
+  </div>
 }
