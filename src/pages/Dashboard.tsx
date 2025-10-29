@@ -100,49 +100,49 @@ const Dashboard: React.FC = () => {
 
   
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  useEffect(() => {
-    const initSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+  // useEffect(() => {
+  //   const initSession = async () => {
+  //     const { data, error } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error('Error getting session:', error);
-        navigate('/login');
-        return;
-      }
+  //     if (error) {
+  //       console.error('Error getting session:', error);
+  //       navigate('/login');
+  //       return;
+  //     }
 
-      const session = data.session;
+  //     const session = data.session;
 
-      if (!session) {
-        navigate('/login');
-        return;
-      }
+  //     if (!session) {
+  //       navigate('/login');
+  //       return;
+  //     }
 
-      setUser(session.user);
-      setLoading(false);
-    };
+  //     setUser(session.user);
+  //     setLoading(false);
+  //   };
 
-    initSession();
+  //   initSession();
 
-    // Listen for auth changes (login/logout)
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate('/login');
-      } else {
-        setUser(session.user);
-      }
-    });
+  //   // Listen for auth changes (login/logout)
+  //   const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+  //     if (!session) {
+  //       navigate('/login');
+  //     } else {
+  //       setUser(session.user);
+  //     }
+  //   });
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, [navigate]);
+  //   return () => {
+  //     listener.subscription.unsubscribe();
+  //   };
+  // }, [navigate]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
+  // const handleLogout = async () => {
+  //   await supabase.auth.signOut();
+  //   navigate('/login');
+  // };
 
   const paymentMethods = [
     { id: 'telebirr', name: 'Telebirr', icon: Telebirr},
