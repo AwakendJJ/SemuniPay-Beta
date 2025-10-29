@@ -43,8 +43,6 @@ const useBasename = (address: Address | undefined) => {
           // asking L1 ENS: "What name is associated with this address for the BASE chain?"
           coinType: toCoinType(base.id),
         });
-
-        console.log("Fetched Basename:", name);
         if (isMounted) setBasename(name);
       } catch (error) {
         console.error("Error fetching Basename:", error);
@@ -70,8 +68,8 @@ const StyledButton = styled.button`
   position: relative;
   display: inline-block;
   padding: 14px 24px;
-  color:rgb(0, 0, 0);
-  background: #A3E635; 
+  color: rgb(0, 0, 0);
+  background: #a3e635;
   font-size: 16px;
   font-weight: 600;
   border-radius: 100px;
@@ -112,20 +110,19 @@ const ButtonRenderer = ({
 
   // Decide what text to display based on priority:
   // 1. Connecting state
-  // 2. Loading state
-  // 3. Basename (if fetched)
+  // 2. Connect Wallet (if not connected)
+  // 3. Basename (if fetched and available)
   // 4. ENS Name (from ConnectKit standard fetch)
-  // 5. Truncated Address (fallback)
-  // 6. "Connect Wallet" (if not connected)
+  // 5. Truncated Address (immediate fallback when connected)
   const buttonText = useMemo(() => {
     if (isConnecting) return "Connecting...";
     if (!isConnected) return "Connect Wallet";
-    if (basename === undefined) return "Loading...";
     return basename ?? ensName ?? truncatedAddress;
   }, [isConnecting, isConnected, basename, ensName, truncatedAddress]);
 
   return <StyledButton onClick={show}>{buttonText}</StyledButton>;
 };
+
 // --------------------------------------------
 // 5. Exported Component
 // --------------------------------------------
