@@ -276,7 +276,7 @@ const Dashboard: React.FC = () => {
                <p className="text-amber-200/80 text-xs sm:text-sm">
                  We're currently making improvements to our off-ramp service. For updates, reach us on{' '}
                  <a 
-                   href="https://twitter.com/semunipay" 
+                   href="https://x.com/semunipay" 
                    target="_blank" 
                    rel="noopener noreferrer"
                    className="text-amber-300 hover:text-amber-200 underline"
@@ -361,7 +361,7 @@ const Dashboard: React.FC = () => {
            <div className="flex items-center justify-center mb-3 sm:mb-4">
              <div className="flex items-center bg-gray-700/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-600/20">
                <RefreshCw size={14} className="text-lime-400 mr-1.5 sm:mr-2" />
-               <span className="text-xs sm:text-sm text-gray-300">1 USD = {exchangeRate} ETB</span>
+               <span className="text-xs sm:text-sm text-gray-300">1 USD = 152 ETB</span>
              </div>
            </div>
 
@@ -507,7 +507,7 @@ const Dashboard: React.FC = () => {
                 Off-ramp service is temporarily unavailable. We're making improvements and will be back soon.
               </p>
               <a
-                href="https://twitter.com/semunipay"
+                href="https://x.com/semunipay"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-3 text-lime-400 hover:text-lime-300 text-sm font-semibold transition-colors"
