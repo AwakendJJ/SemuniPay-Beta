@@ -2,6 +2,9 @@ import { createConfig, http, createStorage  } from 'wagmi'
 import { base } from 'wagmi/chains'
 import { getDefaultConfig } from "connectkit";
 
+// Maintenance mode flag - can be toggled via environment variable
+export const MAINTENANCE_MODE_ENABLED = import.meta.env.VITE_MAINTENANCE_MODE_ENABLED === 'true' || false;
+
 export const config = createConfig(
   getDefaultConfig({
     chains: [base],
