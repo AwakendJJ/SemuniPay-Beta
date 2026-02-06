@@ -5,6 +5,9 @@ import { getDefaultConfig } from "connectkit";
 // Maintenance mode flag - can be toggled via environment variable
 export const MAINTENANCE_MODE_ENABLED = import.meta.env.VITE_MAINTENANCE_MODE_ENABLED === 'true' || false;
 
+// Off-ramp disabled flag - can be toggled via environment variable
+export const OFF_RAMP_DISABLED = import.meta.env.VITE_OFF_RAMP_DISABLED === 'true' || false;
+
 export const config = createConfig(
   getDefaultConfig({
     chains: [base],

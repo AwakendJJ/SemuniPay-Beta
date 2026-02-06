@@ -14,6 +14,7 @@ import { parseUnits } from 'viem';
 import { BasenameConnectButton } from "../components/BaseNameConnectButton";
 import { supabase } from '../supabaseClient';
 import { User } from '@supabase/supabase-js';
+import { OFF_RAMP_DISABLED } from '../config';
 
 
 const USDC_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`
@@ -55,6 +56,7 @@ const Dashboard: React.FC = () => {
   const [transactionData, setTransactionData] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   
 
   const { data: hash, error: transactionError, isPending: isTransactionPending, writeContractAsync } = useWriteContract()
@@ -262,6 +264,39 @@ const Dashboard: React.FC = () => {
          </div>
        </header>
 
+       {/* Off-ramp Disabled Banner */}
+       {OFF_RAMP_DISABLED && !bannerDismissed && (
+         <div className="max-w-lg sm:max-w-xl lg:max-w-2xl mx-auto px-4 sm:px-6 mt-4 mb-2">
+           <div className="bg-amber-500/20 border border-amber-500/30 backdrop-blur-sm rounded-xl p-4 flex items-start justify-between gap-4">
+             <div className="flex-1">
+               <div className="flex items-center gap-2 mb-1">
+                 <Clock className="text-amber-400" size={18} />
+                 <h3 className="text-amber-300 font-semibold text-sm sm:text-base">Off-ramp Temporarily Unavailable</h3>
+               </div>
+               <p className="text-amber-200/80 text-xs sm:text-sm">
+                 We're currently making improvements to our off-ramp service. For updates, reach us on{' '}
+                 <a 
+                   href="https://twitter.com/semunipay" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="text-amber-300 hover:text-amber-200 underline"
+                 >
+                   X
+                 </a>
+                 .
+               </p>
+             </div>
+             <button
+               onClick={() => setBannerDismissed(true)}
+               className="text-amber-300 hover:text-amber-200 transition-colors flex-shrink-0"
+               aria-label="Dismiss banner"
+             >
+               <X size={18} />
+             </button>
+           </div>
+         </div>
+       )}
+
        {/* Main Content */}
        <div className="max-w-lg sm:max-w-xl lg:max-w-2xl mx-auto px-4 sm:px-6 py-2">
          <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-gray-700/30 shadow-2xl">
@@ -307,7 +342,8 @@ const Dashboard: React.FC = () => {
                        setYouPayAmount(e.target.value);
                      }}
                      placeholder="0.00"
-                     className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none"
+                     disabled={OFF_RAMP_DISABLED}
+                     className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                    />
                  </div>
                  <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 border border-gray-500/30">
@@ -346,7 +382,8 @@ const Dashboard: React.FC = () => {
                      }
                    }
                    placeholder="0.00"
-                     className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none"
+                     disabled={OFF_RAMP_DISABLED}
+                     className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                    />
                  </div>
                  <div className="flex items-center bg-gray-600/50 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 border border-gray-500/30">
@@ -368,7 +405,8 @@ const Dashboard: React.FC = () => {
              <div className="relative">
                <button
                  onClick={() => setShowPaymentMethods(!showPaymentMethods)}
-                 className="w-full bg-gray-700/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30 flex items-center justify-between hover:bg-gray-700/40 transition-all duration-300"
+                 disabled={OFF_RAMP_DISABLED}
+                 className="w-full bg-gray-700/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30 flex items-center justify-between hover:bg-gray-700/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-700/30"
                >
                  <div className="flex items-center">
                    {selectedPaymentMethod ? (
@@ -428,7 +466,8 @@ const Dashboard: React.FC = () => {
                    value={recipientPhone}
                    onChange={(e) => setRecipientPhone(e.target.value)}
                    placeholder="+251 91 234 5678"
-                   className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none"
+                   disabled={OFF_RAMP_DISABLED}
+                   className="w-full bg-transparent text-lg sm:text-xl text-white placeholder-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                  />
                </div>
              </div>
@@ -462,14 +501,30 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Sell Button */}
-          <button
-            onClick={handleSellCrypto}
-            disabled={ !selectedPaymentMethod || !recipientPhone || !youPayAmount || parseFloat(youPayAmount) <= 0}
-            className="w-full bg-lime-400 text-gray-900 font-bold py-4 rounded-2xl hover:bg-lime-300 transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            {/* {isTransacting ? 'Processing...' : 'Sell Crypto'} */}
-            Send ETB
-          </button>
+          {OFF_RAMP_DISABLED ? (
+            <div className="w-full bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-4 text-center">
+              <p className="text-gray-400 text-sm sm:text-base">
+                Off-ramp service is temporarily unavailable. We're making improvements and will be back soon.
+              </p>
+              <a
+                href="https://twitter.com/semunipay"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-3 text-lime-400 hover:text-lime-300 text-sm font-semibold transition-colors"
+              >
+                Follow us on X for updates
+              </a>
+            </div>
+          ) : (
+            <button
+              onClick={handleSellCrypto}
+              disabled={ !selectedPaymentMethod || !recipientPhone || !youPayAmount || parseFloat(youPayAmount) <= 0}
+              className="w-full bg-lime-400 text-gray-900 font-bold py-4 rounded-2xl hover:bg-lime-300 transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {/* {isTransacting ? 'Processing...' : 'Sell Crypto'} */}
+              Send ETB
+            </button>
+          )}
         </div>
       </div>
 
